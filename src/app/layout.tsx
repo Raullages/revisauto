@@ -50,8 +50,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="format-detection" content="telephone=no" />
-        <link rel="apple-touch-icon" href="/logo-dark.png" />
-        <link rel="icon" href="/logo-dark.png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="icon" href="/logo.png" />
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
