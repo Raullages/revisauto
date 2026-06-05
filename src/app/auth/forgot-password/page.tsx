@@ -40,12 +40,12 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <img
-            src="/logo-dark.png"
+            src="/logo-light.png"
             alt="PessoAuto"
             className="mx-auto h-36 w-auto block dark:hidden"
           />
           <img
-            src="/logo-light.png"
+            src="/logo-dark.png"
             alt="PessoAuto"
             className="mx-auto h-36 w-auto hidden dark:block"
           />

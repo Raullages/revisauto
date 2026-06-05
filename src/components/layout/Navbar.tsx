@@ -20,14 +20,14 @@ export function Navbar() {
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2">
           <img
-            src="/logo-dark.png"
+            src="/logo-light-navbar.png"
             alt="PessoAuto"
-            className="h-16 w-auto block dark:hidden"
+            className="h-12 w-auto block dark:hidden"
           />
           <img
-            src="/logo-light.png"
+            src="/logo-dark-navbar.png"
             alt="PessoAuto"
-            className="h-16 w-auto hidden dark:block"
+            className="h-12 w-auto hidden dark:block"
           />
         </Link>
 
