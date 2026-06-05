@@ -6,7 +6,7 @@ export const maintenanceService = {
   async list(): Promise<MaintenanceWithRelations[]> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Nao autenticado");
+    if (!user) throw new Error("Não autenticado");
 
     const { data, error } = await supabase
       .from("maintenances")
@@ -51,6 +51,10 @@ export const maintenanceService = {
       Object.entries(data).filter(([, v]) => v !== ""),
     );
 
+    if (data.status === "pending" && !data.maintenance_date) {
+      payload.maintenance_date = null;
+    }
+
     const { data: maintenance, error } = await supabase
       .from("maintenances")
       .insert(payload as never)
@@ -67,6 +71,10 @@ export const maintenanceService = {
     const payload: Record<string, unknown> = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== ""),
     );
+
+    if (data.status === "pending" && data.maintenance_date === "") {
+      payload.maintenance_date = null;
+    }
 
     const { data: maintenance, error } = await supabase
       .from("maintenances")

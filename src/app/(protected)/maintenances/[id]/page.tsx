@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { useMaintenance, useDeleteMaintenance } from "@/features/maintenances/viewmodel/useMaintenances";
+import { useMaintenance, useDeleteMaintenance, useUpdateMaintenance } from "@/features/maintenances/viewmodel/useMaintenances";
+import type { MaintenanceStatus } from "@/features/maintenances/model/types";
 import { attachmentService } from "@/features/maintenances/services/attachment.service";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -36,6 +37,7 @@ export default function MaintenanceDetailPage() {
   const router = useRouter();
   const { data: maintenance, isLoading } = useMaintenance(id);
   const { mutateAsync: deleteMaintenance, isPending: deleting } = useDeleteMaintenance();
+  const { mutateAsync: updateMaintenance, isPending: transitioning } = useUpdateMaintenance();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -61,13 +63,13 @@ export default function MaintenanceDetailPage() {
     if (!file) return;
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Formato invalido. Use PDF, JPG, PNG ou WEBP.");
+      toast.error("Formato inválido. Use PDF, JPG, PNG ou WEBP.");
       e.target.value = "";
       return;
     }
 
     if (file.size > MAX_SIZE) {
-      toast.error("Arquivo muito grande. Maximo 5MB.");
+      toast.error("Arquivo muito grande. Máximo 5MB.");
       e.target.value = "";
       return;
     }
@@ -106,7 +108,7 @@ export default function MaintenanceDetailPage() {
   if (!maintenance) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Manutencao nao encontrada</p>
+        <p className="text-gray-500 dark:text-gray-400">Manutenção não encontrada</p>
         <Link href="/maintenances" className="mt-2 inline-block text-blue-600 hover:text-blue-500 dark:text-blue-400 text-sm">
           Voltar para lista
         </Link>
@@ -117,10 +119,19 @@ export default function MaintenanceDetailPage() {
   const handleDelete = async () => {
     try {
       await deleteMaintenance(maintenance.id);
-      toast.success("Manutencao removida");
+      toast.success("Manutenção removida");
       router.push("/maintenances");
     } catch {
-      toast.error("Erro ao remover manutencao");
+      toast.error("Erro ao remover manutenção");
+    }
+  };
+
+  const handleTransition = async (newStatus: MaintenanceStatus) => {
+    try {
+      await updateMaintenance({ id: maintenance.id, data: { status: newStatus } });
+      toast.success(`Status alterado para ${statusLabel[newStatus]}`);
+    } catch {
+      toast.error("Erro ao alterar status");
     }
   };
 
@@ -130,8 +141,8 @@ export default function MaintenanceDetailPage() {
   const kmOverdue = nextKm && maintenance.next_change_km! <= maintenance.vehicle_km;
   const dateOverdue = nextDate && nextDate <= today;
 
-  const statusLabel: Record<string, string> = { pending: "Pendente", scheduled: "Agendado", completed: "Concluido" };
-  const priorityLabel: Record<string, string> = { low: "Baixa", medium: "Media", high: "Alta" };
+  const statusLabel: Record<string, string> = { pending: "Pendente", scheduled: "Agendado", completed: "Concluído" };
+  const priorityLabel: Record<string, string> = { low: "Baixa",   medium: "Média", high: "Alta" };
   const statusColor: Record<string, string> = {
     pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     scheduled: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
@@ -184,7 +195,7 @@ export default function MaintenanceDetailPage() {
 
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-gray-900 dark:text-white">Detalhes do servico</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Detalhes do serviço</h2>
         </CardHeader>
         <CardBody>
           <dl className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -212,13 +223,13 @@ export default function MaintenanceDetailPage() {
             )}
             {maintenance.description && (
               <div className="py-2.5 text-sm">
-                <dt className="text-gray-500 dark:text-gray-400 mb-1">Descricao</dt>
+                <dt className="text-gray-500 dark:text-gray-400 mb-1">Descrição</dt>
                 <dd className="font-medium text-gray-900 dark:text-white">{maintenance.description}</dd>
               </div>
             )}
             {maintenance.notes && (
               <div className="py-2.5 text-sm">
-                <dt className="text-gray-500 dark:text-gray-400 mb-1">Observacoes</dt>
+                <dt className="text-gray-500 dark:text-gray-400 mb-1">Observações</dt>
                 <dd className="font-medium text-gray-900 dark:text-white">{maintenance.notes}</dd>
               </div>
             )}
@@ -229,7 +240,7 @@ export default function MaintenanceDetailPage() {
       {(nextKm || nextDate) && (
         <Card className="mt-4">
           <CardHeader>
-            <h2 className="font-semibold text-gray-900 dark:text-white">Proxima troca</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">Próxima troca</h2>
           </CardHeader>
           <CardBody>
             <dl className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -255,6 +266,66 @@ export default function MaintenanceDetailPage() {
           </CardBody>
         </Card>
       )}
+
+      <Card className="mt-4">
+        <CardHeader>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Ações</h2>
+        </CardHeader>
+        <CardBody>
+          <div className="flex flex-wrap gap-2">
+            {maintenance.status === "pending" && (
+              <>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  loading={transitioning}
+                  onClick={() => handleTransition("scheduled")}
+                >
+                  Agendar manutenção
+                </Button>
+                <Button
+                  size="sm"
+                  loading={transitioning}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => handleTransition("completed")}
+                >
+                  Marcar como concluída
+                </Button>
+              </>
+            )}
+            {maintenance.status === "scheduled" && (
+              <>
+                <Button
+                  size="sm"
+                  loading={transitioning}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => handleTransition("completed")}
+                >
+                  Finalizar manutenção
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={transitioning}
+                  onClick={() => handleTransition("pending")}
+                >
+                  Voltar para pendente
+                </Button>
+              </>
+            )}
+            {maintenance.status === "completed" && (
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={transitioning}
+                onClick={() => handleTransition("pending")}
+              >
+                Reabrir manutenção
+              </Button>
+            )}
+          </div>
+        </CardBody>
+      </Card>
 
       <Card className="mt-4">
         <CardHeader className="flex items-center justify-between">
@@ -321,11 +392,11 @@ export default function MaintenanceDetailPage() {
       <div className="mt-6">
         {!confirmDelete ? (
           <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-600 hover:text-red-700 dark:text-red-400">
-            Remover manutencao
+            Remover manutenção
           </Button>
         ) : (
           <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
-            <p className="text-sm text-red-700 dark:text-red-400">Tem certeza? Esta acao nao pode ser desfeita.</p>
+            <p className="text-sm text-red-700 dark:text-red-400">Tem certeza? Esta ação não pode ser desfeita.</p>
             <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>
               Cancelar
             </Button>

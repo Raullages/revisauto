@@ -14,10 +14,10 @@ export default function NewMaintenancePage() {
   const handleSubmit = async (data: MaintenanceFormData) => {
     try {
       await mutateAsync(data);
-      toast.success("Manutencao registrada!");
+      toast.success("Manutenção registrada!");
       router.push("/maintenances");
     } catch {
-      toast.error("Erro ao registrar manutencao");
+      toast.error("Erro ao registrar manutenção");
     }
   };
 
@@ -33,9 +33,9 @@ export default function NewMaintenancePage() {
           </svg>
           Voltar
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nova manutencao</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nova manutenção</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Registre um servico realizado
+          Registre um serviço realizado
         </p>
       </div>
 

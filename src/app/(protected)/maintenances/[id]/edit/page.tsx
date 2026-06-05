@@ -25,7 +25,7 @@ export default function EditMaintenancePage() {
   if (!maintenance) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Manutencao nao encontrada</p>
+        <p className="text-gray-500 dark:text-gray-400">Manutenção não encontrada</p>
         <Link href="/maintenances" className="mt-2 inline-block text-blue-600 hover:text-blue-500 dark:text-blue-400 text-sm">
           Voltar para lista
         </Link>
@@ -36,10 +36,10 @@ export default function EditMaintenancePage() {
   const handleSubmit = async (data: MaintenanceFormData) => {
     try {
       await mutateAsync({ id: maintenance.id, data });
-      toast.success("Manutencao atualizada!");
+      toast.success("Manutenção atualizada!");
       router.push(`/maintenances/${maintenance.id}`);
     } catch {
-      toast.error("Erro ao atualizar manutencao");
+      toast.error("Erro ao atualizar manutenção");
     }
   };
 
@@ -55,7 +55,7 @@ export default function EditMaintenancePage() {
           </svg>
           Voltar
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Editar manutencao</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Editar manutenção</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {maintenance.title}
         </p>
@@ -65,7 +65,7 @@ export default function EditMaintenancePage() {
         defaultValues={maintenance}
         onSubmit={handleSubmit}
         loading={isPending}
-        submitLabel="Salvar alteracoes"
+        submitLabel="Salvar alterações"
       />
     </div>
   );

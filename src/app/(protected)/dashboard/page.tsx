@@ -18,7 +18,7 @@ export default function DashboardPage() {
     return (
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Visao geral dos seus veiculos</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Visão geral dos seus veículos</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <CardSkeleton key={i} />
@@ -31,7 +31,7 @@ export default function DashboardPage() {
   if (!data) return null;
 
   const stats = [
-    { label: "Veiculos", value: data.totalVehicles.toString() },
+    { label: "Veículos", value: data.totalVehicles.toString() },
     { label: "Gastos do mes", value: formatCurrency(data.monthlySpending) },
     { label: "Gastos do ano", value: formatCurrency(data.yearlySpending) },
     { label: "Pendentes", value: data.pendingCount.toString() },
@@ -40,7 +40,7 @@ export default function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Visao geral dos seus veiculos</p>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Visão geral dos seus veículos</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((card) => (
@@ -94,7 +94,7 @@ export default function DashboardPage() {
                           ? "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-300"
                           : "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300"
                     }`}>
-                      {m.priority === "high" ? "Alta" : m.priority === "medium" ? "Media" : "Baixa"}
+                      {m.priority === "high" ? "Alta" : m.priority === "medium" ? "Média" : "Baixa"}
                     </span>
                   </div>
                 ))}
@@ -108,10 +108,29 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Alertas</h2>
           </CardHeader>
           <CardBody>
-            {data.overdueAlerts.length === 0 && data.upcomingAlerts.length === 0 ? (
+            {data.overdueAlerts.length === 0 && data.upcomingAlerts.length === 0 && data.pendingHighPriority.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum alerta no momento.</p>
             ) : (
               <div className="space-y-3">
+                {data.pendingHighPriority.map((alert) => (
+                  <div
+                    key={`high-${alert.id}`}
+                    onClick={() => router.push(`/maintenances/${alert.id}`)}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30"
+                  >
+                    <span className="shrink-0 rounded bg-red-200 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-800 dark:text-red-300">
+                      ALTA PRIORIDADE
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-300 truncate">
+                        {alert.title}
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        {alert.vehicles?.brand} {alert.vehicles?.model} — Pendente
+                      </p>
+                    </div>
+                  </div>
+                ))}
                 {data.overdueAlerts.map((alert) => (
                   <div
                     key={`overdue-${alert.id}`}
@@ -161,7 +180,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Proximas trocas</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Próximas trocas</h2>
             <Button variant="ghost" size="sm" onClick={() => router.push("/maintenances")}>
               Ver todas
             </Button>
@@ -207,14 +226,14 @@ export default function DashboardPage() {
 
       <Card className="mt-6">
         <CardHeader className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ultimas manutencoes</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Últimas manutenções</h2>
           <Button variant="ghost" size="sm" onClick={() => router.push("/maintenances")}>
             Ver todas
           </Button>
         </CardHeader>
         <CardBody>
           {data.recentMaintenances.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma manutencao registrada.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma manutenção registrada.</p>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {data.recentMaintenances.map((m) => (

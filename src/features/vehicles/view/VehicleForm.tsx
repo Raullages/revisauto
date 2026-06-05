@@ -15,8 +15,8 @@ const fuelOptions = [
   { value: "Flex", label: "Flex" },
   { value: "Diesel", label: "Diesel" },
   { value: "GNV", label: "GNV" },
-  { value: "Eletrico", label: "Eletrico" },
-  { value: "Hibrido", label: "Hibrido" },
+  { value: "Elétrico", label: "Elétrico" },
+  { value: "Híbrido", label: "Híbrido" },
 ];
 
 interface VehicleFormProps {
@@ -26,9 +26,9 @@ interface VehicleFormProps {
   submitLabel?: string;
 }
 
-const fuelValues = ["", "Gasolina", "Etanol", "Flex", "Diesel", "GNV", "Eletrico", "Hibrido"] as const;
+const fuelValues = ["", "Gasolina", "Etanol", "Flex", "Diesel", "GNV", "Elétrico", "Híbrido"] as const;
 
-function toFuelValue(value: string | null | undefined): "" | "Gasolina" | "Etanol" | "Flex" | "Diesel" | "GNV" | "Eletrico" | "Hibrido" {
+function toFuelValue(value: string | null | undefined): "" | "Gasolina" | "Etanol" | "Flex" | "Diesel" | "GNV" | "Elétrico" | "Híbrido" {
   if (value && fuelValues.includes(value as typeof fuelValues[number])) {
     return value as typeof fuelValues[number];
   }
@@ -166,11 +166,11 @@ export function VehicleForm({
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Observacoes
+          Observações
         </label>
         <textarea
           rows={3}
-          placeholder="Anotacoes sobre o veiculo..."
+          placeholder="Anotações sobre o veículo..."
           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-blue-400"
           {...register("notes")}
         />

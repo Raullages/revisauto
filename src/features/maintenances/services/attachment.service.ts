@@ -17,7 +17,7 @@ function buildPath(userId: string, maintenanceId: string, filename: string) {
 async function getUserId(): Promise<string> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Nao autenticado");
+  if (!user) throw new Error("Não autenticado");
   return user.id;
 }
 

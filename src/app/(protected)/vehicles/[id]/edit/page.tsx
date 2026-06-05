@@ -25,7 +25,7 @@ export default function EditVehiclePage() {
   if (!vehicle) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Veiculo nao encontrado</p>
+        <p className="text-gray-500 dark:text-gray-400">Veículo não encontrado</p>
         <Link href="/vehicles" className="mt-2 inline-block text-blue-600 hover:text-blue-500 dark:text-blue-400 text-sm">
           Voltar para lista
         </Link>
@@ -36,10 +36,10 @@ export default function EditVehiclePage() {
   const handleSubmit = async (data: VehicleFormData) => {
     try {
       await mutateAsync({ id: vehicle.id, data });
-      toast.success("Veiculo atualizado!");
+      toast.success("Veículo atualizado!");
       router.push(`/vehicles/${vehicle.id}`);
     } catch {
-      toast.error("Erro ao atualizar veiculo");
+      toast.error("Erro ao atualizar veículo");
     }
   };
 
@@ -55,7 +55,7 @@ export default function EditVehiclePage() {
           </svg>
           Voltar
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Editar veiculo</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Editar veículo</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {vehicle.brand} {vehicle.model} ({vehicle.year})
         </p>
@@ -65,7 +65,7 @@ export default function EditVehiclePage() {
         defaultValues={vehicle}
         onSubmit={handleSubmit}
         loading={isPending}
-        submitLabel="Salvar alteracoes"
+        submitLabel="Salvar alterações"
       />
     </div>
   );

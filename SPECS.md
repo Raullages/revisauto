@@ -117,7 +117,7 @@ Sistema PWA de Controle de Manutenção Veicular
 - [x] Criar migrations SQL para as 5 tabelas (`profiles`, `vehicles`, `maintenance_categories`, `maintenances`, `attachments`)
 - [x] Criar RLS policies (usuário só vê os próprios dados)
 - [x] Seed das categorias de manutenção
-- [ ] Bucket no Supabase Storage para anexos
+- [x] Bucket no Supabase Storage para anexos
 
 ### 7.2 Veículos — `features/vehicles/`
 
@@ -253,6 +253,170 @@ alter table public.maintenances
 
 ---
 
+### 9.2 Correção de Typos (Acentuação)
+
+Corrigir palavras sem acentuação/cedilha/til em toda a codebase.
+
+**Motivação:** ~101 ocorrências em 15 arquivos com texto em português faltando `ç`, `~`, `´`, `^`. Ex: "manutencao", "veiculo", "proxima", "nao", "Eletrico", "Hibrido", "servico", "Media", "oleo".
+
+**Arquivos afetados (15):**
+- `src/app/(protected)/dashboard/page.tsx` — 5 ocorrências
+- `src/app/(protected)/maintenances/page.tsx` — 10 ocorrências
+- `src/app/(protected)/maintenances/[id]/page.tsx` — 11 ocorrências
+- `src/app/(protected)/maintenances/[id]/edit/page.tsx` — 4 ocorrências
+- `src/app/(protected)/maintenances/new/page.tsx` — 4 ocorrências
+- `src/app/(protected)/vehicles/page.tsx` — 12 ocorrências
+- `src/app/(protected)/vehicles/[id]/page.tsx` — 8 ocorrências
+- `src/app/(protected)/vehicles/[id]/edit/page.tsx` — 4 ocorrências
+- `src/app/(protected)/vehicles/new/page.tsx` — 4 ocorrências
+- `src/app/auth/signup/page.tsx` — 1 ocorrência
+- `src/app/(protected)/profile/page.tsx` — 1 ocorrência
+- `src/features/maintenances/view/MaintenanceForm.tsx` — 14 ocorrências
+- `src/features/maintenances/model/schemas.ts` — 4 ocorrências
+- `src/features/vehicles/model/schemas.ts` — 4 ocorrências
+- `src/features/vehicles/view/VehicleForm.tsx` — 6 ocorrências
+
+**Padrões de substituição:**
+
+| Errado | Correto | Ocorrências |
+|--------|---------|-------------|
+| `manutencao` / `Manutencao` | `manutenção` / `Manutenção` | 11 |
+| `veiculo` / `Veiculo` | `veículo` / `Veículo` | 24 |
+| `veiculos` / `Veiculos` | `veículos` / `Veículos` | 11 |
+| `proxima` | `próxima` | 4 |
+| `nao` | `não` | 5 |
+| `Eletrico` | `Elétrico` | 6 |
+| `Hibrido` | `Híbrido` | 6 |
+| `servico` | `serviço` | 4 |
+| `Media` | `Média` | 4 |
+| `Visao` | `Visão` | 2 |
+| `comecar` | `começar` | 2 |
+| `anotacoes` | `anotações` | 2 |
+| `obrigatorio` / `obrigatoria` | `obrigatório` / `obrigatória` | 4 |
+| `acao` | `ação` | 1 |
+| `serao` | `serão` | 1 |
+| `ultimas` / `Ultimas` | `últimas` / `Últimas` | 1 |
+| `invalido` | `inválido` | 2 |
+| `Descricao` | `Descrição` | 2 |
+| `Titulo` | `Título` | 2 |
+| `Concluida` | `Concluída` | 1 |
+| `Observacoes` | `Observações` | 4 |
+| `oleo` | `óleo` | 1 |
+| `usuario` | `usuário` | 1 |
+
+**Estimativa:** ~1h (substituições em massa com verificação)
+
+---
+
+### 9.3 Shimmer no Perfil
+
+Adicionar loading state na página de perfil enquanto os dados do usuário são buscados.
+
+**Motivação:** A página renderiza imediatamente com placeholders "Usuario" / "usuario@email.com" enquanto `supabase.auth.getUser()` e a query na tabela `profiles` estão pendentes. Outras páginas (`vehicles`, `maintenances`, `dashboard`) já usam `CardSkeleton` — o perfil é a única sem loading state.
+
+**Mudanças em `src/app/(protected)/profile/page.tsx`:**
+- Adicionar estado `loading` (inicia `true`)
+- Enquanto `loading === true`, renderizar `CardSkeleton` ou shimmer específico do perfil
+- Após fetch, setar `loading = false` e renderizar dados reais
+- Remover fallbacks `"Usuario"` / `"usuario@email.com"` do render final (só mostrar se dado real vier vazio)
+
+**Componentes reutilizáveis:**
+- `CardSkeleton` em `src/components/ui/Skeleton.tsx`
+- `LoadingSpinner` / `PageLoader` em `src/components/ui/LoadingSpinner.tsx`
+
+**Estimativa:** ~30min
+
+---
+
+### 9.4 Correção do Redirect de Email (Supabase Config)
+
+Corrigir o link de confirmação de email que envia `redirect_to` apontando para `localhost`.
+
+**Motivação:** O `signUp` em `auth.service.ts` não define `redirectTo`. O Supabase usa a URL padrão do projeto (`Site URL`), que está configurada como `http://localhost:3000`. Em produção, usuários são redirecionados para localhost ao clicar no link de confirmação.
+
+**Solução (dashboard Supabase):**
+- Acessar [Supabase Dashboard](https://supabase.com/dashboard/project/oechxpgspfzzkplnyudg) > Authentication > URL Configuration
+- Alterar **Site URL** para a URL de produção (ex: `https://pessoauto.vercel.app`)
+- Adicionar URLs de redirecionamento permitidas em **Redirect URLs**
+
+**Solução (código):**
+- Opcionalmente adicionar `redirectTo` explícito no `signUp` em `auth.service.ts`:
+  ```ts
+  supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: fullName },
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+  ```
+
+**Estimativa:** ~15min (config no dashboard)
+
+---
+
+### 9.5 Correção do `maintenance_date NOT NULL`
+
+Permitir salvar manutenção com status "Pendente" sem data.
+
+**Motivação:** O banco exige `maintenance_date NOT NULL`, mas o Zod schema permite opcional quando `status = "pending"`. O service filtra strings vazias, removendo o campo do payload, causando erro no banco.
+
+**Solução — Migration para remover o NOT NULL:**
+```sql
+alter table public.maintenances
+  alter column maintenance_date drop not null;
+```
+
+**Solução — Ajuste no service (`maintenance.service.ts`):**
+- Na filtragem de payload (linhas 50-52 e 67-69), preservar `maintenance_date` como `null` quando string vazia e status for `"pending"`:
+  ```ts
+  // Ao invés de remover strings vazias, transformar em null
+  if (data.maintenance_date === "" && data.status === "pending") {
+    payload.maintenance_date = null;
+  }
+  ```
+
+**Solução — Ajuste no tipo TypeScript:**
+- `maintenance_date: string | null` já está correto em `types.ts`
+
+**Estimativa:** ~1h (migration + service + validação)
+
+---
+
+### 9.6 Botões de Transição de Status (Workflow)
+
+Adicionar botões de workflow na página de detalhes da manutenção para avançar o status sem precisar editar o formulário completo.
+
+**Motivação:** Hoje o usuário precisa clicar em "Editar", abrir o formulário, alterar o status no dropdown e salvar. Um fluxo mais natural teria botões diretos como "Iniciar manutenção" (pending → scheduled) e "Finalizar" (scheduled → completed).
+
+**Transições possíveis:**
+
+| De | Para | Rótulo do botão | Cor |
+|----|------|-----------------|-----|
+| `pending` | `scheduled` | Agendar manutenção | Azul (primary) |
+| `pending` | `completed` | Marcar como concluída | Verde |
+| `scheduled` | `completed` | Finalizar manutenção | Verde |
+| `scheduled` | `pending` | Voltar para pendente | Cinza (secondary) |
+| `completed` | `pending` | Reabrir manutenção | Cinza (secondary) |
+
+**Mudanças em `maintenances/[id]/page.tsx`:**
+- Importar `useUpdateMaintenance` do viewmodel
+- Adicionar handler `handleTransition(newStatus)` que chama `updateMaintenance({ id, data: { status: newStatus } })`
+- Novo `Card` de "Ações" entre a seção "Próxima troca" e "Anexos"
+- Botões condicionais baseados no `maintenance.status` atual
+- Estado `transitioning` para loading dos botões
+
+**Infraestrutura já existente:**
+- `useUpdateMaintenance()` — aceita `Partial<MaintenanceFormData>`, já invalida cache
+- `maintenance.service.update(id, data)` — já suporta partial updates
+- `Button` com variantes `primary`, `secondary`, `outline`, `ghost`
+- `CardFooter` no componente `Card`
+
+**Estimativa:** ~1h30 (UI + handlers + toast feedback)
+
+---
+
 ## 10. Fora do Escopo (confirmado)
 
 - ❌ OCR / IA
@@ -278,3 +442,18 @@ alter table public.maintenances
 | Manutenções | 100% | — |
 | Dashboard | 100% | — |
 | Anexos | 100% | — |
+
+---
+
+## 12. Próximas Features (pós-MVP) — Resumo
+
+| # | Item | Status | Estimativa |
+|---|------|--------|------------|
+| 9.1 | Status e Prioridade de Manutenções | ✅ | ~4h |
+| 9.2 | Correção de Typos (acentuação) | ✅ | ~1h |
+| 9.3 | Shimmer no Perfil | ✅ | ~30min |
+| 9.4 | Correção do Redirect de Email | ✅ | ~15min |
+| 9.5 | Correção do `maintenance_date NOT NULL` | ✅ | ~1h |
+| 9.6 | Botões de Transição de Status (Workflow) | ✅ | ~1h30 |
+
+**Total restante:** 0h — todos os itens concluídos ✅

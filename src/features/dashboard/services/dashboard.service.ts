@@ -10,6 +10,7 @@ export interface DashboardData {
   yearlySpending: number;
   overdueAlerts: MaintenanceWithRelations[];
   upcomingAlerts: MaintenanceWithRelations[];
+  pendingHighPriority: MaintenanceWithRelations[];
   pendingRepairs: MaintenanceWithRelations[];
   recentMaintenances: MaintenanceWithRelations[];
   upcomingChanges: MaintenanceWithRelations[];
@@ -90,6 +91,9 @@ export const dashboardService = {
       .filter((m) => m.status === "completed")
       .slice(0, 5);
 
+    const pendingHighPriority = maintenances
+      .filter((m) => m.status === "pending" && m.priority === "high");
+
     const pendingRepairs = maintenances
       .filter((m) => m.status === "pending")
       .sort((a, b) => {
@@ -105,6 +109,7 @@ export const dashboardService = {
       yearlySpending,
       overdueAlerts,
       upcomingAlerts,
+      pendingHighPriority,
       pendingRepairs,
       recentMaintenances,
       upcomingChanges,

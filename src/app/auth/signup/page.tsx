@@ -55,7 +55,7 @@ export default function SignupPage() {
             className="mx-auto h-24 w-auto hidden dark:block"
           />
           <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Criar conta</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Cadastre-se para comecar</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Cadastre-se para começar</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

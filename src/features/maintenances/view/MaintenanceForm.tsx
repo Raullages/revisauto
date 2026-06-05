@@ -90,13 +90,13 @@ export function MaintenanceForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Veiculo *
+            Veículo *
           </label>
           <select
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400"
             {...register("vehicle_id")}
           >
-            <option value="">Selecione um veiculo...</option>
+            <option value="">Selecione um veículo...</option>
             {vehicles?.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.brand} {v.model} ({v.year})
@@ -129,8 +129,8 @@ export function MaintenanceForm({
         </div>
 
         <Input
-          label="Titulo *"
-          placeholder="Ex: Troca de oleo"
+          label="Título *"
+          placeholder="Ex: Troca de óleo"
           error={errors.title?.message}
           {...register("title")}
         />
@@ -143,7 +143,7 @@ export function MaintenanceForm({
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400"
             {...register("status")}
           >
-            <option value="completed">Concluida</option>
+            <option value="completed">Concluída</option>
             <option value="scheduled">Agendada</option>
             <option value="pending">Pendente</option>
           </select>
@@ -162,7 +162,7 @@ export function MaintenanceForm({
               {...register("priority")}
             >
               <option value="low">Baixa</option>
-              <option value="medium">Media</option>
+              <option value="medium">Média</option>
               <option value="high">Alta</option>
             </select>
             {errors.priority && (
@@ -181,7 +181,7 @@ export function MaintenanceForm({
         )}
 
         <Input
-          label="KM do Veiculo"
+          label="KM do Veículo"
           type="number"
           placeholder="Ex: 50000"
           error={errors.vehicle_km?.message}
@@ -207,11 +207,11 @@ export function MaintenanceForm({
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Descricao
+          Descrição
         </label>
         <textarea
           rows={2}
-          placeholder="Detalhes do servico realizado..."
+          placeholder="Detalhes do serviço realizado..."
           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-blue-400"
           {...register("description")}
         />
@@ -219,18 +219,18 @@ export function MaintenanceForm({
 
       <fieldset className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
         <legend className="px-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Controle de proxima troca
+          Controle de próxima troca
         </legend>
         <div className="grid gap-4 sm:grid-cols-2 mt-2">
           <Input
-            label="KM da proxima troca"
+            label="KM da próxima troca"
             type="number"
             placeholder="Ex: 60000"
             error={errors.next_change_km?.message}
             {...register("next_change_km")}
           />
           <Input
-            label="Data da proxima troca"
+            label="Data da próxima troca"
             type="date"
             error={errors.next_change_date?.message}
             {...register("next_change_date")}
@@ -240,11 +240,11 @@ export function MaintenanceForm({
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Observacoes
+          Observações
         </label>
         <textarea
           rows={2}
-          placeholder="Anotacoes adicionais..."
+          placeholder="Anotações adicionais..."
           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-blue-400"
           {...register("notes")}
         />

@@ -14,10 +14,10 @@ export default function NewVehiclePage() {
   const handleSubmit = async (data: VehicleFormData) => {
     try {
       await mutateAsync(data);
-      toast.success("Veiculo cadastrado!");
+      toast.success("Veículo cadastrado!");
       router.push("/vehicles");
     } catch {
-      toast.error("Erro ao cadastrar veiculo");
+      toast.error("Erro ao cadastrar veículo");
     }
   };
 
@@ -33,9 +33,9 @@ export default function NewVehiclePage() {
           </svg>
           Voltar
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Novo veiculo</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Novo veículo</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Preencha os dados do veiculo
+          Preencha os dados do veículo
         </p>
       </div>
 

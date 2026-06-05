@@ -25,12 +25,12 @@ const statusTabs: { value: MaintenanceStatus | "all"; label: string }[] = [
   { value: "all", label: "Todos" },
   { value: "pending", label: "Pendentes" },
   { value: "scheduled", label: "Agendados" },
-  { value: "completed", label: "Concluidos" },
+  { value: "completed", label: "Concluídos" },
 ];
 
 const priorityLabels: Record<MaintenancePriority, string> = {
   low: "Baixa",
-  medium: "Media",
+  medium: "Média",
   high: "Alta",
 };
 
@@ -49,7 +49,7 @@ const statusColors: Record<MaintenanceStatus, string> = {
 const statusLabels: Record<MaintenanceStatus, string> = {
   pending: "Pendente",
   scheduled: "Agendado",
-  completed: "Concluido",
+  completed: "Concluído",
 };
 
 export default function MaintenancesPage() {
@@ -64,8 +64,8 @@ export default function MaintenancesPage() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manutencoes</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Historico de servicos realizados</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manutenções</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Histórico de serviços realizados</p>
           </div>
         </div>
         <div className="space-y-4">
@@ -84,13 +84,13 @@ export default function MaintenancesPage() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manutencoes</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Historico de servicos realizados</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manutenções</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Histórico de serviços realizados</p>
           </div>
         </div>
         <EmptyState
-          title="Cadastre um veiculo primeiro"
-          description="Voce precisa ter pelo menos um veiculo para registrar manutencoes"
+          title="Cadastre um veículo primeiro"
+          description="Você precisa ter pelo menos um veículo para registrar manutenções"
           icon={
             <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -99,7 +99,7 @@ export default function MaintenancesPage() {
           }
           action={
             <Button onClick={() => router.push("/vehicles/new")}>
-              Cadastrar veiculo
+              Cadastrar veículo
             </Button>
           }
         />
@@ -117,13 +117,13 @@ export default function MaintenancesPage() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manutencoes</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manutenções</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {filtered.length} servico{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
+            {filtered.length} serviço{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
           </p>
         </div>
         <Button onClick={() => router.push("/maintenances/new")}>
-          Nova manutencao
+          Nova manutenção
         </Button>
       </div>
 
@@ -155,7 +155,7 @@ export default function MaintenancesPage() {
             onChange={(e) => setVehicleFilter(e.target.value)}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white sm:w-auto"
           >
-            <option value="">Todos os veiculos</option>
+            <option value="">Todos os veículos</option>
             {vehicles.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.brand} {v.model}
@@ -167,11 +167,11 @@ export default function MaintenancesPage() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="Nenhuma manutencao encontrada"
-          description={statusFilter !== "all" ? `Nenhum item com status "${statusLabels[statusFilter]}".` : "Registre a primeira manutencao"}
+          title="Nenhuma manutenção encontrada"
+          description={statusFilter !== "all" ? `Nenhum item com status "${statusLabels[statusFilter]}".` : "Registre a primeira manutenção"}
           action={
             <Button onClick={() => router.push("/maintenances/new")}>
-              Nova manutencao
+              Nova manutenção
             </Button>
           }
         />

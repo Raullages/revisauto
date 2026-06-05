@@ -15,8 +15,8 @@ const fuelLabels: Record<string, string> = {
   Flex: "Flex",
   Diesel: "Diesel",
   GNV: "GNV",
-  Eletrico: "Eletrico",
-  Hibrido: "Hibrido",
+  Elétrico: "Elétrico",
+  Híbrido: "Híbrido",
 };
 
 export default function VehicleDetailPage() {
@@ -48,10 +48,10 @@ export default function VehicleDetailPage() {
   const handleDelete = async () => {
     try {
       await deleteVehicle(vehicle.id);
-      toast.success("Veiculo removido");
+      toast.success("Veículo removido");
       router.push("/vehicles");
     } catch {
-      toast.error("Erro ao remover veiculo");
+      toast.error("Erro ao remover veículo");
     }
   };
 
@@ -67,7 +67,7 @@ export default function VehicleDetailPage() {
     { label: "Chassi", value: vehicle.chassis },
     { label: "Renavam", value: vehicle.renavam },
     { label: "Data de Aquisicao", value: vehicle.acquisition_date },
-    { label: "Observacoes", value: vehicle.notes },
+    { label: "Observações", value: vehicle.notes },
   ].filter((row) => row.value != null && row.value !== "");
 
   return (
@@ -99,7 +99,7 @@ export default function VehicleDetailPage() {
 
       <Card>
         <CardHeader>
-          <h2 className="font-semibold text-gray-900 dark:text-white">Detalhes do veiculo</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-white">Detalhes do veículo</h2>
         </CardHeader>
         <CardBody>
           <dl className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -127,11 +127,11 @@ export default function VehicleDetailPage() {
       <div className="mt-6">
         {!confirmDelete ? (
           <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-600 hover:text-red-700 dark:text-red-400">
-            Remover veiculo
+            Remover veículo
           </Button>
         ) : (
           <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
-            <p className="text-sm text-red-700 dark:text-red-400">Tem certeza? As manutencoes vinculadas serao removidas.</p>
+            <p className="text-sm text-red-700 dark:text-red-400">Tem certeza? As manutenções vinculadas serão removidas.</p>
             <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>
               Cancelar
             </Button>

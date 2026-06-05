@@ -8,7 +8,7 @@ export const vehicleService = {
   async list(): Promise<VehicleRow[]> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Nao autenticado");
+    if (!user) throw new Error("Não autenticado");
 
     const { data, error } = await supabase
       .from("vehicles")
@@ -35,7 +35,7 @@ export const vehicleService = {
   async create(data: VehicleFormData): Promise<VehicleRow> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Nao autenticado");
+    if (!user) throw new Error("Não autenticado");
 
     const payload: Record<string, unknown> = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== ""),

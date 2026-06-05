@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const maintenanceSchema = z.object({
-  vehicle_id: z.string().min(1, "Selecione um veiculo"),
+  vehicle_id: z.string().min(1, "Selecione um veículo"),
   category_id: z.string().min(1, "Selecione uma categoria"),
-  title: z.string().min(1, "Titulo e obrigatorio").max(200),
+  title: z.string().min(1, "Título é obrigatório").max(200),
   status: z.enum(["pending", "scheduled", "completed"]),
   priority: z.enum(["low", "medium", "high"]),
   description: z.string().max(1000).optional().or(z.literal("")),
@@ -21,7 +21,7 @@ export const maintenanceSchema = z.object({
     }
     return true;
   },
-  { message: "Data e obrigatoria para manutencoes concluidas ou agendadas", path: ["maintenance_date"] },
+  { message: "Data é obrigatória para manutenções concluídas ou agendadas", path: ["maintenance_date"] },
 );
 
 export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
@@ -29,7 +29,7 @@ export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 export const maintenanceFormSchema = maintenanceSchema.refine(
   (data) => !data.next_change_km || data.next_change_km > data.vehicle_km,
   {
-    message: "KM da proxima troca deve ser maior que o KM atual",
+    message: "KM da próxima troca deve ser maior que o KM atual",
     path: ["next_change_km"],
   },
 );
