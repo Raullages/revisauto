@@ -45,16 +45,15 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <img
-            src="/logo-dark.svg"
+            src="/logo-dark.png"
             alt="PessoAuto"
-            className="mx-auto h-16 w-auto block dark:hidden"
+            className="mx-auto h-42 w-auto block dark:hidden"
           />
           <img
-            src="/logo-light.svg"
+            src="/logo-light.png"
             alt="PessoAuto"
-            className="mx-auto h-16 w-auto hidden dark:block"
+            className="mx-auto h-42 w-auto hidden dark:block"
           />
-          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Controle de manutencao veicular</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

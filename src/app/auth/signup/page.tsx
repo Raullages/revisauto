@@ -45,14 +45,14 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <img
-            src="/logo-dark.svg"
+            src="/logo-dark.png"
             alt="PessoAuto"
-            className="mx-auto h-12 w-auto block dark:hidden"
+            className="mx-auto h-24 w-auto block dark:hidden"
           />
           <img
-            src="/logo-light.svg"
+            src="/logo-light.png"
             alt="PessoAuto"
-            className="mx-auto h-12 w-auto hidden dark:block"
+            className="mx-auto h-24 w-auto hidden dark:block"
           />
           <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Criar conta</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Cadastre-se para comecar</p>
