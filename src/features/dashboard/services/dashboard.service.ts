@@ -6,6 +6,7 @@ export interface DashboardData {
   totalVehicles: number;
   totalMaintenances: number;
   pendingCount: number;
+  alertCount: number;
   monthlySpending: number;
   yearlySpending: number;
   overdueAlerts: MaintenanceWithRelations[];
@@ -94,6 +95,15 @@ export const dashboardService = {
     const pendingHighPriority = maintenances
       .filter((m) => m.status === "pending" && m.priority === "high");
 
+    const scheduledPastDate = maintenances.filter(
+      (m) => m.status === "scheduled" && m.maintenance_date && m.maintenance_date < today,
+    );
+
+    const alertCount =
+      pendingHighPriority.length +
+      overdueAlerts.length +
+      scheduledPastDate.length;
+
     const pendingRepairs = maintenances
       .filter((m) => m.status === "pending")
       .sort((a, b) => {
@@ -105,6 +115,7 @@ export const dashboardService = {
       totalVehicles: vehicles.length,
       totalMaintenances: maintenances.length,
       pendingCount: maintenances.filter((m) => m.status === "pending").length,
+      alertCount,
       monthlySpending,
       yearlySpending,
       overdueAlerts,

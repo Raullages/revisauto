@@ -153,7 +153,7 @@ export default function MaintenancesPage() {
           <select
             value={vehicleFilter}
             onChange={(e) => setVehicleFilter(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white sm:w-auto"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base md:text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white sm:w-auto"
           >
             <option value="">Todos os veículos</option>
             {vehicles.map((v) => (

@@ -417,6 +417,92 @@ Adicionar botões de workflow na página de detalhes da manutenção para avanç
 
 ---
 
+### 9.7 Notificações (Badges + Web Push)
+
+Sistema de notificações para alertar o usuário sobre manutenções pendentes, agendadas não realizadas e prazos vencidos.
+
+**Motivação:** Hoje o usuário só vê alertas ao abrir o dashboard. Com notificações, ele é proativamente avisado mesmo fora do app.
+
+#### Fase 1 — Badges in-app (~2h)
+
+- Badge com contador de alertas no ícone "Manutenções" do `BottomNav`
+- Contador considera: pendentes com alta prioridade + trocas vencidas + agendadas com data passada
+- Atualização em tempo real via `useDashboard` (já tem `refetchInterval: 60000`)
+- Badge no ícone do `BottomNav` com `absolute` positioning e indicador numérico
+
+**Mudanças:**
+- `BottomNav.tsx` — adicionar badge numérico no item "Manutenções"
+- Hook `useAlertCount` ou reutilizar `useDashboard` com `staleTime` baixo
+- Separar alertas pendentes no `dashboard.service.ts` (já existe `pendingHighPriority`)
+
+#### Fase 2 — Web Push (~4h)
+
+- Supabase Edge Function com `pg_cron` para verificar diariamente manutenções com data agendada passada e não concluídas
+- Service Worker (`sw.ts`) com handler de `push` event
+- Tabela `notification_subscriptions` no banco para armazenar tokens de push por usuário
+- Tabela `notifications` para histórico de notificações enviadas
+- Página de configurações de notificação (ativar/desativar) no perfil
+- Endpoint para salvar/excluir subscription no banco
+
+**Arquitetura:**
+```
+pg_cron (diário 9h) → Edge Function → Query DB → Push via Web Push API → Service Worker → Notification
+```
+
+**Estimativa total:** ~6h (2h badges + 4h push)
+
+---
+
+### 9.8 Select de Veículo em Cascata (Brasil API)
+
+Preenchimento assistido dos dados do veículo usando a Brasil API (FIPE), com selects em cascata: Marca → Modelo → Ano → Versão.
+
+**Motivação:** Hoje o usuário precisa digitar manualmente marca, modelo, ano, versão. Com a API pública, ele seleciona o veículo em cascata e os campos são preenchidos automaticamente, reduzindo erros de digitação e padronizando os dados.
+
+**API utilizada:** [Brasil API](https://brasilapi.com.br/api/fipe) (gratuita, sem autenticação)
+
+**Endpoints:**
+| Etapa | Endpoint | Retorno |
+|-------|----------|---------|
+| 1. Marcas | `GET /api/fipe/marcas/v1/carros` | Lista de marcas |
+| 2. Modelos | `GET /api/fipe/marcas/v1/carros/{codigoMarca}/modelos` | Modelos da marca |
+| 3. Anos | `GET /api/fipe/marcas/v1/carros/{codigoMarca}/modelos/{codigoModelo}/anos` | Anos do modelo |
+| 4. Versão | Seleciona o ano → retorna valor FIPE e detalhes | Dados completos do veículo |
+
+**Fluxo no formulário (`VehicleForm.tsx`):**
+
+1. Botão "Buscar veículo" ao lado dos campos manuais (ou toggle)
+2. Ao ativar, mostra 4 selects em cascata:
+   - **Marca** (ex: Honda) → carrega ao montar
+   - **Modelo** (ex: Civic) → carrega ao selecionar marca
+   - **Ano** (ex: 2020) → carrega ao selecionar modelo
+   - **Versão** (ex: 2.0 LX 16V Flex) → carrega ao selecionar ano
+3. Ao selecionar a versão, preenche automaticamente: `brand`, `model`, `year`, `version`
+4. Demais campos (placa, cor, km, combustível, etc.) continuam manuais
+5. Se a API falhar ou o usuário preferir, campos manuais continuam funcionando
+
+**Serviço (`fipe.service.ts`):**
+```ts
+// features/vehicles/services/fipe.service.ts
+export const fipeService = {
+  getBrands(): Promise<{ code: string; name: string }[]>,
+  getModels(brandCode: string): Promise<{ code: string; name: string }[]>,
+  getYears(brandCode: string, modelCode: string): Promise<{ code: string; name: string }[]>,
+  getVersion(brandCode: string, modelCode: string, yearCode: string): Promise<FipeVehicle>,
+};
+```
+
+**Cache:** Respostas da API cacheadas via TanStack Query com `staleTime: Infinity` (dados da FIPE não mudam com frequência).
+
+**UI:**
+- Toggle "Buscar por API" / "Cadastro manual" no topo do formulário
+- Selects com loading state e mensagem de erro se API indisponível
+- Fallback automático para campos manuais se API falhar
+
+**Estimativa:** ~4h (serviço + viewmodel + UI + cache)
+
+---
+
 ## 10. Fora do Escopo (confirmado)
 
 - ❌ OCR / IA
@@ -455,5 +541,8 @@ Adicionar botões de workflow na página de detalhes da manutenção para avanç
 | 9.4 | Correção do Redirect de Email | ✅ | ~15min |
 | 9.5 | Correção do `maintenance_date NOT NULL` | ✅ | ~1h |
 | 9.6 | Botões de Transição de Status (Workflow) | ✅ | ~1h30 |
+| 9.7 | Notificações — Badges in-app | ✅ | ~2h |
+| 9.8 | Notificações — Web Push | ❌ | ~4h |
+| 9.9 | Select de Veículo em Cascata (Brasil API) | ❌ | ~4h |
 
-**Total restante:** 0h — todos os itens concluídos ✅
+**Total restante:** ~8h
