@@ -1,6 +1,6 @@
 {
-  "name": "RevisAuto",
-  "short_name": "RevisAuto",
+  "name": "PessoAuto",
+  "short_name": "PessoAuto",
   "description": "Controle de manutenção veicular",
   "start_url": "/",
   "display": "standalone",

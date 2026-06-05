@@ -5,10 +5,12 @@ import type { MaintenanceWithRelations } from "@/features/maintenances/model/typ
 export interface DashboardData {
   totalVehicles: number;
   totalMaintenances: number;
+  pendingCount: number;
   monthlySpending: number;
   yearlySpending: number;
   overdueAlerts: MaintenanceWithRelations[];
   upcomingAlerts: MaintenanceWithRelations[];
+  pendingRepairs: MaintenanceWithRelations[];
   recentMaintenances: MaintenanceWithRelations[];
   upcomingChanges: MaintenanceWithRelations[];
 }
@@ -45,22 +47,24 @@ export const dashboardService = {
     const { start: yearStart, end: yearEnd } = getYearRange();
 
     const monthlySpending = maintenances
-      .filter((m) => m.maintenance_date >= monthStart && m.maintenance_date <= monthEnd)
+      .filter((m) => m.maintenance_date && m.maintenance_date >= monthStart && m.maintenance_date <= monthEnd && m.status === "completed")
       .reduce((sum, m) => sum + m.amount, 0);
 
     const yearlySpending = maintenances
-      .filter((m) => m.maintenance_date >= yearStart && m.maintenance_date <= yearEnd)
+      .filter((m) => m.maintenance_date && m.maintenance_date >= yearStart && m.maintenance_date <= yearEnd && m.status === "completed")
       .reduce((sum, m) => sum + m.amount, 0);
 
     const today = new Date().toISOString().split("T")[0];
 
     const overdueAlerts = maintenances.filter((m) => {
+      if (m.status === "pending") return false;
       const kmOverdue = m.next_change_km && m.next_change_km > 0 && m.next_change_km <= m.vehicle_km;
       const dateOverdue = m.next_change_date && m.next_change_date <= today;
       return kmOverdue || dateOverdue;
     });
 
     const upcomingAlerts = maintenances.filter((m) => {
+      if (m.status === "pending") return false;
       const kmUpcoming = m.next_change_km && m.next_change_km > 0 && m.next_change_km > m.vehicle_km && m.next_change_km <= m.vehicle_km + 1000;
       const dateUpcoming = m.next_change_date && m.next_change_date > today && daysFromNow(m.next_change_date) <= 30;
       return (kmUpcoming || dateUpcoming) && !overdueAlerts.includes(m);
@@ -82,15 +86,26 @@ export const dashboardService = {
       })
       .slice(0, 5);
 
-    const recentMaintenances = maintenances.slice(0, 5);
+    const recentMaintenances = maintenances
+      .filter((m) => m.status === "completed")
+      .slice(0, 5);
+
+    const pendingRepairs = maintenances
+      .filter((m) => m.status === "pending")
+      .sort((a, b) => {
+        const order = { high: 0, medium: 1, low: 2 };
+        return (order[a.priority as keyof typeof order] || 1) - (order[b.priority as keyof typeof order] || 1);
+      });
 
     return {
       totalVehicles: vehicles.length,
       totalMaintenances: maintenances.length,
+      pendingCount: maintenances.filter((m) => m.status === "pending").length,
       monthlySpending,
       yearlySpending,
       overdueAlerts,
       upcomingAlerts,
+      pendingRepairs,
       recentMaintenances,
       upcomingChanges,
     };

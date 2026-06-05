@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RevisAuto - Controle de Manutenção Veicular",
+  title: "PessoAuto - Controle de Manutenção Veicular",
   description: "Sistema PWA para controle de manutenção de carros e motos",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "RevisAuto",
+    title: "PessoAuto",
   },
 };
 
@@ -50,7 +50,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="format-detection" content="telephone=no" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/logo-dark.svg" />
+        <link rel="icon" href="/logo-dark.svg" />
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>

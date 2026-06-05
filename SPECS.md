@@ -1,4 +1,4 @@
-# SPECS.md — RevisAuto MVP
+# SPECS.md — PessoAuto MVP
 
 Sistema PWA de Controle de Manutenção Veicular
 
@@ -209,7 +209,51 @@ src/
 
 ---
 
-## 9. Fora do Escopo (confirmado)
+## 9. Próximas Features (pós-MVP)
+
+### 9.1 Status e Prioridade de Manutenções
+
+Adicionar controle de status e prioridade às manutenções, permitindo registrar reparos pendentes sem data definida.
+
+**Motivação:** Hoje toda manutenção exige data. Isso não cobre casos como "quebrou a grade do ar condicionado" — algo que precisa ser feito, mas não é urgente nem tem data marcada.
+
+**Campos novos na tabela `maintenances`:**
+
+| Campo | Tipo | Valores | Default |
+|-------|------|---------|---------|
+| `status` | `text` | `pending`, `scheduled`, `completed` | `completed` |
+| `priority` | `text` | `low`, `medium`, `high` | `medium` |
+
+**Mudanças no formulário (`MaintenanceForm`):**
+- Campo `status` — radio/select: Pendente / Agendado / Concluído
+- Campo `priority` — só aparece se `status = pending`: Baixa / Média / Alta
+- `maintenance_date` — obrigatório apenas se `status = scheduled` ou `completed`
+
+**Mudanças na listagem (`maintenances/page.tsx`):**
+- Abas ou filtro por status (Todos / Pendentes / Agendados / Concluídos)
+- Badge visual de prioridade (🔵 baixa, 🟡 média, 🔴 alta)
+- Itens pendentes com alta prioridade aparecem nos alertas do dashboard
+
+**Mudanças no Dashboard:**
+- Nova seção "Reparos Pendentes" com cards agrupados por prioridade
+- Itens `pending` + `priority = high` entram nos alertas vermelhos
+
+**Migration necessária:**
+```sql
+alter table public.maintenances
+  add column status text not null default 'completed',
+  add column priority text not null default 'medium';
+
+alter table public.maintenances
+  add constraint check_status check (status in ('pending', 'scheduled', 'completed')),
+  add constraint check_priority check (priority in ('low', 'medium', 'high'));
+```
+
+**Estimativa:** ~4h (migration + backend + formulário + listagem + dashboard)
+
+---
+
+## 10. Fora do Escopo (confirmado)
 
 - ❌ OCR / IA
 - ❌ Integração FIPE
@@ -221,7 +265,7 @@ src/
 
 ---
 
-## 10. Resumo
+## 11. Resumo
 
 | Área | Concluído | Pendente |
 |------|-----------|----------|

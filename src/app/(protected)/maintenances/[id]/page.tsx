@@ -130,6 +130,14 @@ export default function MaintenanceDetailPage() {
   const kmOverdue = nextKm && maintenance.next_change_km! <= maintenance.vehicle_km;
   const dateOverdue = nextDate && nextDate <= today;
 
+  const statusLabel: Record<string, string> = { pending: "Pendente", scheduled: "Agendado", completed: "Concluido" };
+  const priorityLabel: Record<string, string> = { low: "Baixa", medium: "Media", high: "Alta" };
+  const statusColor: Record<string, string> = {
+    pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    scheduled: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    completed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  };
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
@@ -144,6 +152,22 @@ export default function MaintenanceDetailPage() {
         </Link>
         <div className="flex items-start justify-between">
           <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-bold ${statusColor[maintenance.status]}`}>
+                {statusLabel[maintenance.status]}
+              </span>
+              {maintenance.status === "pending" && (
+                <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-bold ${
+                  maintenance.priority === "high"
+                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                    : maintenance.priority === "medium"
+                      ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                }`}>
+                  {priorityLabel[maintenance.priority]}
+                </span>
+              )}
+            </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {maintenance.title}
             </h1>
@@ -164,12 +188,14 @@ export default function MaintenanceDetailPage() {
         </CardHeader>
         <CardBody>
           <dl className="divide-y divide-gray-100 dark:divide-gray-700">
-            <div className="flex justify-between py-2.5 text-sm">
-              <dt className="text-gray-500 dark:text-gray-400">Data</dt>
-              <dd className="font-medium text-gray-900 dark:text-white">
-                {new Date(maintenance.maintenance_date + "T12:00:00").toLocaleDateString("pt-BR")}
-              </dd>
-            </div>
+            {maintenance.maintenance_date && (
+              <div className="flex justify-between py-2.5 text-sm">
+                <dt className="text-gray-500 dark:text-gray-400">Data</dt>
+                <dd className="font-medium text-gray-900 dark:text-white">
+                  {new Date(maintenance.maintenance_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between py-2.5 text-sm">
               <dt className="text-gray-500 dark:text-gray-400">KM</dt>
               <dd className="font-medium text-gray-900 dark:text-white">{maintenance.vehicle_km.toLocaleString()}</dd>

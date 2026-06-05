@@ -98,13 +98,15 @@ export interface Database {
           category_id: string;
           title: string;
           description: string | null;
-          maintenance_date: string;
+          maintenance_date: string | null;
           vehicle_km: number;
           amount: number;
           workshop: string | null;
           notes: string | null;
           next_change_km: number | null;
           next_change_date: string | null;
+          status: string;
+          priority: string;
           created_at: string;
         };
         Insert: {
@@ -113,13 +115,15 @@ export interface Database {
           category_id: string;
           title: string;
           description?: string | null;
-          maintenance_date: string;
+          maintenance_date?: string | null;
           vehicle_km: number;
           amount: number;
           workshop?: string | null;
           notes?: string | null;
           next_change_km?: number | null;
           next_change_date?: string | null;
+          status?: string;
+          priority?: string;
           created_at?: string;
         };
         Update: {
@@ -128,13 +132,15 @@ export interface Database {
           category_id?: string;
           title?: string;
           description?: string | null;
-          maintenance_date?: string;
+          maintenance_date?: string | null;
           vehicle_km?: number;
           amount?: number;
           workshop?: string | null;
           notes?: string | null;
           next_change_km?: number | null;
           next_change_date?: string | null;
+          status?: string;
+          priority?: string;
           created_at?: string;
         };
         Relationships: [];

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Icon circle with car -->
+  <circle cx="48" cy="48" r="38" fill="url(#bg)"/>
+  <!-- Car body -->
+  <path d="M28 42h40l6 10h8v8h-6l-4 8H24l-4-8h-6v-8h6z" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+  <!-- Windows -->
+  <rect x="40" y="30" width="12" height="10" rx="2" fill="#2563eb"/>
+  <rect x="54" y="30" width="14" height="10" rx="2" fill="#2563eb"/>
+  <!-- Wheels -->
+  <circle cx="34" cy="58" r="7" fill="#1e293b" stroke="#2563eb" stroke-width="3"/>
+  <circle cx="62" cy="58" r="7" fill="#1e293b" stroke="#2563eb" stroke-width="3"/>
+  <!-- Wheel hubs -->
+  <circle cx="34" cy="58" r="3" fill="#64748b"/>
+  <circle cx="62" cy="58" r="3" fill="#64748b"/>
+  <!-- Headlight -->
+  <rect x="72" y="44" width="4" height="4" rx="1" fill="#fbbf24"/>
+  <!-- Wrench icon floating -->
+  <path d="M88 30l-8 8 6 6 8-8zM84 34c-2 2-2 6 0 8" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Text -->
+  <text x="110" y="45" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="bold" fill="#1e293b">Pesso</text>
+  <text x="224" y="45" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="bold" fill="#2563eb">Auto</text>
+  <text x="110" y="65" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#64748b" letter-spacing="4">CONTROLE DE MANUTENCAO VEICULAR</text>
+</svg>

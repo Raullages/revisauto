@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMaintenances } from "@/features/maintenances/viewmodel/useMaintenances";
 import { useVehicles } from "@/features/vehicles/viewmodel/useVehicles";
+import type { MaintenanceStatus, MaintenancePriority } from "@/features/maintenances/model/types";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,11 +21,43 @@ function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+const statusTabs: { value: MaintenanceStatus | "all"; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "pending", label: "Pendentes" },
+  { value: "scheduled", label: "Agendados" },
+  { value: "completed", label: "Concluidos" },
+];
+
+const priorityLabels: Record<MaintenancePriority, string> = {
+  low: "Baixa",
+  medium: "Media",
+  high: "Alta",
+};
+
+const priorityColors: Record<MaintenancePriority, string> = {
+  low: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+};
+
+const statusColors: Record<MaintenanceStatus, string> = {
+  pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  scheduled: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  completed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+};
+
+const statusLabels: Record<MaintenanceStatus, string> = {
+  pending: "Pendente",
+  scheduled: "Agendado",
+  completed: "Concluido",
+};
+
 export default function MaintenancesPage() {
   const router = useRouter();
   const { data: maintenances, isLoading } = useMaintenances();
   const { data: vehicles } = useVehicles();
   const [vehicleFilter, setVehicleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<MaintenanceStatus | "all">("all");
 
   if (isLoading) {
     return (
@@ -74,17 +107,19 @@ export default function MaintenancesPage() {
     );
   }
 
-  const filtered = vehicleFilter
-    ? maintenances?.filter((m) => m.vehicle_id === vehicleFilter)
-    : maintenances;
+  const filtered = (maintenances || [])
+    .filter((m) => !vehicleFilter || m.vehicle_id === vehicleFilter)
+    .filter((m) => statusFilter === "all" || m.status === statusFilter);
+
+  const pendingCount = maintenances?.filter((m) => m.status === "pending").length || 0;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manutencoes</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {filtered?.length || 0} servico{filtered?.length !== 1 ? "s" : ""} encontrado{filtered?.length !== 1 ? "s" : ""}
+            {filtered.length} servico{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
           </p>
         </div>
         <Button onClick={() => router.push("/maintenances/new")}>
@@ -92,8 +127,29 @@ export default function MaintenancesPage() {
         </Button>
       </div>
 
-      {vehicles.length > 0 && (
-        <div className="mb-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-1 overflow-x-auto">
+          {statusTabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setStatusFilter(tab.value)}
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                statusFilter === tab.value
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              {tab.label}
+              {tab.value === "pending" && pendingCount > 0 && (
+                <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {vehicles.length > 0 && (
           <select
             value={vehicleFilter}
             onChange={(e) => setVehicleFilter(e.target.value)}
@@ -106,13 +162,13 @@ export default function MaintenancesPage() {
               </option>
             ))}
           </select>
-        </div>
-      )}
+        )}
+      </div>
 
-      {!filtered || filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState
           title="Nenhuma manutencao encontrada"
-          description={vehicleFilter ? "Este veiculo nao tem manutencoes registradas" : "Registre a primeira manutencao"}
+          description={statusFilter !== "all" ? `Nenhum item com status "${statusLabels[statusFilter]}".` : "Registre a primeira manutencao"}
           action={
             <Button onClick={() => router.push("/maintenances/new")}>
               Nova manutencao
@@ -130,21 +186,32 @@ export default function MaintenancesPage() {
               <CardBody>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      {isOverdue({ ...m, vehicle_km: m.vehicle_km }) && (
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold ${statusColors[m.status]}`}>
+                        {statusLabels[m.status]}
+                      </span>
+                      {m.status === "pending" && (
+                        <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityColors[m.priority]}`}>
+                          {priorityLabels[m.priority]}
+                        </span>
+                      )}
+                      {m.status !== "pending" && isOverdue({ ...m, vehicle_km: m.vehicle_km }) && (
                         <span className="inline-flex items-center rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">
                           VENCIDO
                         </span>
                       )}
-                      <span className="inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                        {m.maintenance_categories?.name}
-                      </span>
+                      {m.maintenance_categories?.name && (
+                        <span className="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                          {m.maintenance_categories.name}
+                        </span>
+                      )}
                     </div>
                     <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                       {m.title}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {m.vehicles?.brand} {m.vehicles?.model} — {new Date(m.maintenance_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                      {m.vehicles?.brand} {m.vehicles?.model}
+                      {m.maintenance_date && ` — ${new Date(m.maintenance_date + "T12:00:00").toLocaleDateString("pt-BR")}`}
                     </p>
                   </div>
                   <div className="text-right shrink-0">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { maintenanceSchema, type MaintenanceFormData } from "../model/schemas";
 import { useVehicles } from "@/features/vehicles/viewmodel/useVehicles";
@@ -45,6 +45,7 @@ export function MaintenanceForm({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<MaintenanceFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +55,8 @@ export function MaintenanceForm({
           vehicle_id: defaultValues.vehicle_id || "",
           category_id: defaultValues.category_id || "",
           title: defaultValues.title || "",
+          status: defaultValues.status || "completed",
+          priority: defaultValues.priority || "medium",
           description: defaultValues.description || "",
           maintenance_date: defaultValues.maintenance_date || "",
           vehicle_km: defaultValues.vehicle_km ?? 0,
@@ -67,6 +70,8 @@ export function MaintenanceForm({
           vehicle_id: "",
           category_id: "",
           title: "",
+          status: "completed",
+          priority: "medium",
           description: "",
           maintenance_date: "",
           vehicle_km: 0,
@@ -77,6 +82,8 @@ export function MaintenanceForm({
           next_change_date: "",
         },
   });
+
+  const watchedStatus = useWatch({ control, name: "status" });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -128,15 +135,53 @@ export function MaintenanceForm({
           {...register("title")}
         />
 
-        <Input
-          label="Data *"
-          type="date"
-          error={errors.maintenance_date?.message}
-          {...register("maintenance_date")}
-        />
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Status *
+          </label>
+          <select
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400"
+            {...register("status")}
+          >
+            <option value="completed">Concluida</option>
+            <option value="scheduled">Agendada</option>
+            <option value="pending">Pendente</option>
+          </select>
+          {errors.status && (
+            <p className="mt-1 text-xs text-red-500">{errors.status.message}</p>
+          )}
+        </div>
+
+        {watchedStatus === "pending" && (
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Prioridade
+            </label>
+            <select
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400"
+              {...register("priority")}
+            >
+              <option value="low">Baixa</option>
+              <option value="medium">Media</option>
+              <option value="high">Alta</option>
+            </select>
+            {errors.priority && (
+              <p className="mt-1 text-xs text-red-500">{errors.priority.message}</p>
+            )}
+          </div>
+        )}
+
+        {(watchedStatus === "completed" || watchedStatus === "scheduled") && (
+          <Input
+            label={watchedStatus === "scheduled" ? "Data agendada *" : "Data *"}
+            type="date"
+            error={errors.maintenance_date?.message}
+            {...register("maintenance_date")}
+          />
+        )}
 
         <Input
-          label="KM do Veiculo *"
+          label="KM do Veiculo"
           type="number"
           placeholder="Ex: 50000"
           error={errors.vehicle_km?.message}

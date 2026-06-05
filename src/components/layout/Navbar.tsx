@@ -19,32 +19,16 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-lg dark:border-gray-800 dark:bg-gray-900/80">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <svg
-            className="h-7 w-7 text-blue-600 dark:text-blue-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M1 16h22M9 6h4l2 2h5a1 1 0 011 1v7"
-            />
-          </svg>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
-            RevisAuto
-          </span>
+          <img
+            src="/logo-dark.svg"
+            alt="PessoAuto"
+            className="h-7 w-auto block dark:hidden"
+          />
+          <img
+            src="/logo-light.svg"
+            alt="PessoAuto"
+            className="h-7 w-auto hidden dark:block"
+          />
         </Link>
 
         <div className="flex items-center gap-2">

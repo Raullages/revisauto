@@ -44,14 +44,17 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/50">
-            <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M1 16h22M9 6h4l2 2h5a1 1 0 011 1v7" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Criar conta</h1>
+          <img
+            src="/logo-dark.svg"
+            alt="PessoAuto"
+            className="mx-auto h-12 w-auto block dark:hidden"
+          />
+          <img
+            src="/logo-light.svg"
+            alt="PessoAuto"
+            className="mx-auto h-12 w-auto hidden dark:block"
+          />
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Criar conta</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Cadastre-se para comecar</p>
         </div>
 

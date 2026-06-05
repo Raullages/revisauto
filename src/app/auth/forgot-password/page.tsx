@@ -39,12 +39,17 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/50">
-            <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Recuperar senha</h1>
+          <img
+            src="/logo-dark.svg"
+            alt="PessoAuto"
+            className="mx-auto h-12 w-auto block dark:hidden"
+          />
+          <img
+            src="/logo-light.svg"
+            alt="PessoAuto"
+            className="mx-auto h-12 w-auto hidden dark:block"
+          />
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Recuperar senha</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {sent ? "Verifique as instrucoes no seu email" : "Digite seu email para recuperar a senha"}
           </p>

@@ -34,7 +34,7 @@ export default function DashboardPage() {
     { label: "Veiculos", value: data.totalVehicles.toString() },
     { label: "Gastos do mes", value: formatCurrency(data.monthlySpending) },
     { label: "Gastos do ano", value: formatCurrency(data.yearlySpending) },
-    { label: "Manutencoes", value: data.totalMaintenances.toString() },
+    { label: "Pendentes", value: data.pendingCount.toString() },
   ];
 
   return (
@@ -55,6 +55,54 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Reparos Pendentes</h2>
+            {data.pendingRepairs.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => router.push("/maintenances")}>
+                Ver todos
+              </Button>
+            )}
+          </CardHeader>
+          <CardBody>
+            {data.pendingRepairs.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum reparo pendente.</p>
+            ) : (
+              <div className="space-y-2">
+                {data.pendingRepairs.map((m) => (
+                  <div
+                    key={`pending-${m.id}`}
+                    onClick={() => router.push(`/maintenances/${m.id}`)}
+                    className={`flex cursor-pointer items-center justify-between rounded-lg p-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                      m.priority === "high"
+                        ? "border border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10"
+                        : ""
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {m.title}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {m.vehicles?.brand} {m.vehicles?.model}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                      m.priority === "high"
+                        ? "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-300"
+                        : m.priority === "medium"
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-300"
+                          : "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300"
+                    }`}>
+                      {m.priority === "high" ? "Alta" : m.priority === "medium" ? "Media" : "Baixa"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardBody>
+        </Card>
+
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Alertas</h2>
