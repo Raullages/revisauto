@@ -12,8 +12,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
         router.replace("/auth/login");
       } else {
         setAllowed(true);
