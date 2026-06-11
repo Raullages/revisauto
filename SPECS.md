@@ -544,5 +544,69 @@ export const fipeService = {
 | 9.7 | Notificações — Badges in-app | ✅ | ~2h |
 | 9.8 | Notificações — Web Push | ❌ | ~4h |
 | 9.9 | Select de Veículo em Cascata (Brasil API) | ❌ | ~4h |
+| 9.10 | Módulo de Combustível | ✅ | ~5h |
 
 **Total restante:** ~8h
+
+---
+
+## 13. Módulo de Combustível (`features/fuel/`)
+
+### 13.1 Banco de Dados
+
+**Tabela `fuel_logs`:**
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | `uuid PK` | |
+| `vehicle_id` | `uuid FK vehicles` | Veículo abastecido |
+| `date` | `date NOT NULL` | Data do abastecimento |
+| `odometer_km` | `int NOT NULL` | KM no momento do abastecimento |
+| `liters` | `numeric(6,2) NOT NULL` | Litros abastecidos |
+| `total_cost` | `numeric(10,2) NOT NULL` | Valor total pago |
+| `price_per_liter` | `numeric(6,3)` | Preço/litro (auto: `total_cost / liters`) |
+| `fuel_type` | `text NOT NULL` | `gasolina` / `etanol` / `diesel` / `gnv` |
+| `is_full_tank` | `bool DEFAULT true` | Tanque cheio? Essencial para cálculo de média |
+| `gas_station` | `text` | Nome do posto |
+| `notes` | `text` | Observações |
+| `created_at` | `timestamptz` | |
+
+### 13.2 Cálculos
+
+- **Média km/l:** diferença de KM entre 2 tanques cheios consecutivos ÷ litros do 2º abastecimento
+- **Custo/km:** `total_cost ÷ km_percorridos`
+- **Dashboard:** gasto total mês/ano, média geral km/l, última média
+
+### 13.3 Estrutura (segue MVVM)
+
+```
+features/fuel/
+├── model/types.ts       → FuelLog, FuelLogWithVehicle
+├── model/schemas.ts     → Zod (fuelSchema + refine odometer_km > último)
+├── services/fuel.service.ts → Supabase CRUD + cálculo de médias
+├── view/FuelForm.tsx    → Formulário reutilizável
+└── viewmodel/useFuel.ts → TanStack Query hooks
+```
+
+### 13.4 Rotas
+
+| Rota | Descrição |
+|------|-----------|
+| `/fuel` | Abastecimentos — lista + cards de estatísticas |
+| `/fuel/new` | Novo abastecimento |
+| `/fuel/[id]` | Detalhes + preço/litro |
+| `/fuel/[id]/edit` | Edição |
+| `/fuel/calculator` | Calculadora de combustível (placeholder) |
+| `/fuel/reports` | Relatórios semanal/mensal/anual (placeholder) |
+
+**Layout:** tabs (Abastecimentos | Calculadora | Relatórios) + Sidebar colapsável
+
+### 13.5 Integrações
+
+- **BottomNav:** 5º ícone (bomba de combustível)
+- **Dashboard:** card "Gasto com Combustível" (mês/ano) + média km/l
+- **Veículo:** seção "Histórico de Combustível" na página de detalhes
+
+### 13.6 RLS
+
+Ownership via `vehicle_id`, mesmo padrão de `maintenances`.

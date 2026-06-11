@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useDashboard } from "@/features/dashboard/viewmodel/useDashboard";
+import { useFuelStats } from "@/features/fuel/viewmodel/useFuel";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +14,7 @@ function formatCurrency(value: number) {
 export default function DashboardPage() {
   const router = useRouter();
   const { data, isLoading } = useDashboard();
+  const { data: fuelStats } = useFuelStats();
 
   if (isLoading) {
     return (
@@ -32,7 +34,7 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "Veículos", value: data.totalVehicles.toString() },
-    { label: "Gastos do mes", value: formatCurrency(data.monthlySpending) },
+    { label: "Gastos do mês", value: formatCurrency(data.monthlySpending) },
     { label: "Gastos do ano", value: formatCurrency(data.yearlySpending) },
     { label: "Pendentes", value: data.pendingCount.toString() },
   ];
@@ -53,6 +55,29 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {fuelStats && (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Gasto combustível</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+              {formatCurrency(fuelStats.total_spent)}
+            </p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Média km/l</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+              {fuelStats.avg_km_per_liter != null ? `${fuelStats.avg_km_per_liter.toFixed(1)}` : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Abastecimentos</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+              {fuelStats.log_count}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <Card>

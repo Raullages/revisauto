@@ -36,6 +36,16 @@ const navigation = [
     ),
   },
   {
+    label: "Combustível",
+    href: "/fuel",
+    icon: (
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 6.343A8 8 0 002.343 17.657a8 8 0 0015.314-11.314zM12 8v4l2 2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 19h2M17 19h2M12 19h0" />
+      </svg>
+    ),
+  },
+  {
     label: "Perfil",
     href: "/profile",
     icon: (

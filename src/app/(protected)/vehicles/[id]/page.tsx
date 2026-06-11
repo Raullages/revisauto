@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useVehicle, useDeleteVehicle } from "@/features/vehicles/viewmodel/useVehicles";
+import { useFuelLogsByVehicle } from "@/features/fuel/viewmodel/useFuel";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -19,11 +20,23 @@ const fuelLabels: Record<string, string> = {
   Híbrido: "Híbrido",
 };
 
+const fuelTypeLabels: Record<string, string> = {
+  gasolina: "Gasolina",
+  etanol: "Etanol",
+  diesel: "Diesel",
+  gnv: "GNV",
+};
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: vehicle, isLoading } = useVehicle(id);
   const { mutateAsync: deleteVehicle, isPending: deleting } = useDeleteVehicle();
+  const { data: fuelLogs } = useFuelLogsByVehicle(id);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (isLoading) {
@@ -37,7 +50,7 @@ export default function VehicleDetailPage() {
   if (!vehicle) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Veiculo nao encontrado</p>
+        <p className="text-gray-500 dark:text-gray-400">Veículo não encontrado</p>
         <Link href="/vehicles" className="mt-2 inline-block text-blue-600 hover:text-blue-500 dark:text-blue-400 text-sm">
           Voltar para lista
         </Link>
@@ -121,6 +134,54 @@ export default function VehicleDetailPage() {
               </div>
             ))}
           </dl>
+        </CardBody>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader className="flex items-center justify-between">
+          <h2 className="font-semibold text-gray-900 dark:text-white">Histórico de combustível</h2>
+          <Button variant="ghost" size="sm" onClick={() => router.push(`/fuel/new`)}>
+            Novo
+          </Button>
+        </CardHeader>
+        <CardBody>
+          {fuelLogs && fuelLogs.length > 0 ? (
+            <div className="space-y-2">
+              {fuelLogs.slice(0, 5).map((f) => (
+                <div
+                  key={f.id}
+                  onClick={() => router.push(`/fuel/${f.id}`)}
+                  className="flex cursor-pointer items-center justify-between rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {new Date(f.date + "T12:00:00").toLocaleDateString("pt-BR")}
+                      <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                        {fuelTypeLabels[f.fuel_type] || f.fuel_type}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {f.liters} L — {f.odometer_km.toLocaleString()} km
+                      {f.gas_station && ` — ${f.gas_station}`}
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white shrink-0 ml-2">
+                    {formatCurrency(f.total_cost)}
+                  </p>
+                </div>
+              ))}
+              {fuelLogs.length > 5 && (
+                <Link
+                  href={`/fuel`}
+                  className="block text-center text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 py-1"
+                >
+                  Ver todos ({fuelLogs.length})
+                </Link>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum abastecimento registrado.</p>
+          )}
         </CardBody>
       </Card>
 
