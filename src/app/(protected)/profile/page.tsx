@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<{ email?: string; fullName?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const push = usePushNotifications();
 
   useEffect(() => {
     const supabase = createClient();
@@ -67,6 +69,42 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {push.isSupported && (
+        <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Notificações push
+              </h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {push.subscribed
+                  ? "Você receberá alertas de manutenções vencidas e próximas."
+                  : push.permission === "denied"
+                    ? "Permissão bloqueada. Habilite nas configurações do navegador."
+                    : "Receba alertas quando manutenções estiverem pendentes."}
+              </p>
+            </div>
+            {push.permission !== "denied" && (
+              <button
+                onClick={push.subscribed ? push.unsubscribe : push.subscribe}
+                disabled={push.loading}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  push.subscribed ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"
+                } ${push.loading ? "opacity-50" : ""}`}
+                role="switch"
+                aria-checked={push.subscribed}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    push.subscribed ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

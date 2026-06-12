@@ -169,6 +169,78 @@ export interface Database {
         };
         Relationships: [];
       };
+      fuel_logs: {
+        Row: {
+          id: string;
+          vehicle_id: string;
+          date: string;
+          odometer_km: number;
+          liters: number;
+          total_cost: number;
+          price_per_liter: number | null;
+          fuel_type: string;
+          is_full_tank: boolean;
+          gas_station: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          vehicle_id: string;
+          date: string;
+          odometer_km: number;
+          liters: number;
+          total_cost: number;
+          price_per_liter?: number | null;
+          fuel_type: string;
+          is_full_tank?: boolean;
+          gas_station?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          vehicle_id?: string;
+          date?: string;
+          odometer_km?: number;
+          liters?: number;
+          total_cost?: number;
+          price_per_liter?: number | null;
+          fuel_type?: string;
+          is_full_tank?: boolean;
+          gas_station?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          endpoint?: string;
+          p256dh?: string;
+          auth?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

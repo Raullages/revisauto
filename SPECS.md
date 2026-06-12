@@ -610,3 +610,86 @@ features/fuel/
 ### 13.6 RLS
 
 Ownership via `vehicle_id`, mesmo padrão de `maintenances`.
+
+---
+
+## 14. Monetização (Freemium)
+
+### 14.1 Plano Gratuito
+
+| Funcionalidade | Limite |
+|---------------|--------|
+| Veículos | Até 2 |
+| Manutenções | Até 50 registros |
+| Abastecimentos | Até 50 registros |
+| Anexos | 5 MB por arquivo, 25 MB total |
+| Dashboard | Alertas + cards básicos |
+| Badges in-app | ✅ |
+| PWA + Offline | ✅ |
+| Auth (email/senha) | ✅ |
+
+### 14.2 Plano Premium — R$ 12,90/mês (ou R$ 99,90/ano)
+
+| Funcionalidade | Descrição |
+|---------------|-----------|
+| Veículos ilimitados | Sem limite de veículos cadastrados |
+| Histórico ilimitado | Manutenções e abastecimentos sem limite |
+| Calculadora de combustível | Gasolina vs Etanol, custo/km, autonomia |
+| Relatórios | Gráficos semanal, mensal, anual (gastos, km/l) |
+| Exportação CSV | Baixar histórico de manutenções e abastecimentos |
+| Web Push | Notificações de manutenções vencidas e trocas programadas |
+| Brasil API (FIPE) | Preenchimento automático marca/modelo/ano |
+| Anexos expandidos | 25 MB por arquivo, 250 MB total |
+| Badge PRO | Indicador visual no perfil |
+
+### 14.3 Implementação da Cobrança
+
+**Stripe + Supabase (recomendado):**
+- Stripe Checkout (cartão, PIX)
+- Webhook atualiza `profiles.subscription_tier`
+- Novas colunas em `profiles`:
+
+```sql
+alter table profiles add column subscription_tier text default 'free';
+alter table profiles add column subscription_ends_at timestamptz;
+alter table profiles add column stripe_customer_id text;
+```
+
+- Middleware/RLS restringe operações por tier
+- Edge Function gerencia webhooks do Stripe
+
+### 14.4 Gatilhos de Upgrade
+
+| Gatilho | Momento |
+|---------|---------|
+| 3º veículo | Modal "Plano gratuito: até 2 veículos" |
+| 51ª manutenção | Modal de upgrade |
+| 51º abastecimento | Modal de upgrade |
+| `/fuel/calculator` | Tela de preview + CTA |
+| `/fuel/reports` | Tela de preview + CTA |
+| Exportar / Push / FIPE | CTA de upgrade |
+
+### 14.5 Projeção de Receita
+
+| Cenário | Premium | Receita/mês | Custo Supabase | Lucro/mês |
+|---------|---------|-------------|----------------|-----------|
+| Conservador | 100 | R$ 1.290 | ~R$ 50 | R$ 1.240 |
+| Moderado | 500 | R$ 6.450 | ~R$ 100 | R$ 6.350 |
+| Otimista | 2.000 | R$ 25.800 | ~R$ 300 | R$ 25.500 |
+
+> Supabase Free Tier cobre até ~500 usuários ativos. Upgrade para Pro (US$ 25/mês) necessário ao escalar.
+
+### 14.6 Prioridade de Implementação
+
+| # | Feature Premium | Estimativa |
+|---|----------------|------------|
+| 1 | Stripe Checkout + Webhook | ~3h |
+| 2 | Limites de tier (RLS/middleware) | ~1h |
+| 3 | Gatilhos de upgrade (modais) | ~2h |
+| 4 | Relatórios de combustível | ~6h |
+| 5 | Exportação CSV | ~2h |
+| 6 | Calculadora de combustível | ~3h |
+| 7 | Web Push notifications | ~4h |
+| 8 | Brasil API (FIPE) | ~4h |
+
+**Total monetização: ~25h**
