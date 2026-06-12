@@ -1,12 +1,13 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { vehicleSchema } from "../model/schemas";
 import type { VehicleFormData } from "../model/schemas";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { Vehicle } from "../model/types";
+import { formatIntegerInput, parseIntegerInput } from "@/utils/form-number-format";
 
 const fuelOptions = [
   { value: "", label: "Selecione..." },
@@ -42,6 +43,7 @@ export function VehicleForm({
   submitLabel = "Salvar",
 }: VehicleFormProps) {
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -57,7 +59,7 @@ export function VehicleForm({
           plate: defaultValues.plate || "",
           color: defaultValues.color || "",
           fuel: toFuelValue(defaultValues.fuel),
-          current_km: defaultValues.current_km ?? 0,
+          current_km: defaultValues.current_km ?? (undefined as unknown as number),
           chassis: defaultValues.chassis || "",
           renavam: defaultValues.renavam || "",
           acquisition_date: defaultValues.acquisition_date || "",
@@ -71,7 +73,7 @@ export function VehicleForm({
           plate: "",
           color: "",
           fuel: "" as const,
-          current_km: 0,
+          current_km: undefined as unknown as number,
           chassis: "",
           renavam: "",
           acquisition_date: "",
@@ -134,12 +136,25 @@ export function VehicleForm({
             ))}
           </select>
         </div>
-        <Input
-          label="KM Atual *"
-          type="number"
-          placeholder="Ex: 50000"
-          error={errors.current_km?.message}
-          {...register("current_km")}
+        <Controller
+          control={control}
+          name="current_km"
+          render={({ field }) => (
+            <Input
+              label="KM Atual *"
+              type="text"
+              inputMode="numeric"
+              placeholder="Ex: 50.000"
+              error={errors.current_km?.message}
+              value={formatIntegerInput(field.value)}
+              onChange={(event) => {
+                field.onChange(parseIntegerInput(event.target.value) as unknown as number);
+              }}
+              onBlur={field.onBlur}
+              name={field.name}
+              ref={field.ref}
+            />
+          )}
         />
       </div>
 

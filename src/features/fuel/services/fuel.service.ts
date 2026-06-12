@@ -2,16 +2,34 @@ import { createClient } from "@/lib/supabase/client";
 import type { FuelLogWithVehicle, FuelStats } from "../model/types";
 import type { FuelFormData } from "../model/schemas";
 
+async function getCurrentUserId() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Não autenticado");
+  return user.id;
+}
+
+async function assertVehicleOwnership(vehicleId: string, userId: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("vehicles")
+    .select("id")
+    .eq("id", vehicleId)
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data) throw new Error("Veículo não encontrado");
+}
+
 export const fuelService = {
   async list(vehicleId?: string): Promise<FuelLogWithVehicle[]> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Não autenticado");
+    const userId = await getCurrentUserId();
 
     let query = supabase
       .from("fuel_logs")
       .select("*, vehicles!inner(brand, model, plate)")
-      .eq("vehicles.user_id", user.id)
+      .eq("vehicles.user_id", userId)
       .order("date", { ascending: false });
 
     if (vehicleId) {
@@ -30,11 +48,13 @@ export const fuelService = {
 
   async getById(id: string): Promise<FuelLogWithVehicle> {
     const supabase = createClient();
+    const userId = await getCurrentUserId();
 
     const { data, error } = await supabase
       .from("fuel_logs")
-      .select("*, vehicles(brand, model, plate)")
+      .select("*, vehicles!inner(brand, model, plate, user_id)")
       .eq("id", id)
+      .eq("vehicles.user_id", userId)
       .single();
 
     if (error) throw error;
@@ -43,6 +63,9 @@ export const fuelService = {
 
   async create(data: FuelFormData): Promise<FuelLogWithVehicle> {
     const supabase = createClient();
+    const userId = await getCurrentUserId();
+
+    await assertVehicleOwnership(data.vehicle_id, userId);
 
     const payload: Record<string, unknown> = {
       ...Object.fromEntries(
@@ -63,6 +86,13 @@ export const fuelService = {
 
   async update(id: string, data: Partial<FuelFormData>): Promise<FuelLogWithVehicle> {
     const supabase = createClient();
+    const userId = await getCurrentUserId();
+
+    await fuelService.getById(id);
+
+    if (data.vehicle_id) {
+      await assertVehicleOwnership(data.vehicle_id, userId);
+    }
 
     const filtered = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== ""),
@@ -86,6 +116,9 @@ export const fuelService = {
 
   async remove(id: string): Promise<void> {
     const supabase = createClient();
+
+    await fuelService.getById(id);
+
     const { error } = await supabase
       .from("fuel_logs")
       .delete()
@@ -96,8 +129,7 @@ export const fuelService = {
 
   async getStats(vehicleId?: string): Promise<FuelStats> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Não autenticado");
+    const userId = await getCurrentUserId();
 
     type StatsRow = {
       odometer_km: number;
@@ -110,7 +142,7 @@ export const fuelService = {
     let query = supabase
       .from("fuel_logs")
       .select("odometer_km, liters, total_cost, is_full_tank, vehicle_id, vehicles!inner(user_id)")
-      .eq("vehicles.user_id", user.id)
+      .eq("vehicles.user_id", userId)
       .order("date", { ascending: true });
 
     if (vehicleId) {

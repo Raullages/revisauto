@@ -435,19 +435,34 @@ Sistema de notificações para alertar o usuário sobre manutenções pendentes,
 - Hook `useAlertCount` ou reutilizar `useDashboard` com `staleTime` baixo
 - Separar alertas pendentes no `dashboard.service.ts` (já existe `pendingHighPriority`)
 
-#### Fase 2 — Web Push (~4h)
+#### Fase 2 — Web Push (~4h) ✅
 
-- Supabase Edge Function com `pg_cron` para verificar diariamente manutenções com data agendada passada e não concluídas
-- Service Worker (`sw.ts`) com handler de `push` event
-- Tabela `notification_subscriptions` no banco para armazenar tokens de push por usuário
-- Tabela `notifications` para histórico de notificações enviadas
-- Página de configurações de notificação (ativar/desativar) no perfil
-- Endpoint para salvar/excluir subscription no banco
+Arquitetura implementada:
 
-**Arquitetura:**
 ```
-pg_cron (diário 9h) → Edge Function → Query DB → Push via Web Push API → Service Worker → Notification
+pg_cron (diário 9h BRT)
+  → Edge Function send-push-notifs
+    → Query: maintenances com next_change_date vencida ou em até 3 dias
+    → Busca push_subscriptions do usuário
+    → Criptografa payload com crypto.subtle (ECDH + AES-128-GCM)
+    → Assina com VAPID JWT (ES256)
+    → Envia via Web Push API
+  → Service Worker (sw.ts)
+    → push event → showNotification
+    → notificationclick → abre /maintenances/[id]
 ```
+
+**Tabelas:**
+- `push_subscriptions` — endpoint, p256dh, auth por usuário
+- `notifications` — histórico de notificações enviadas
+
+**Arquivos:**
+- `src/app/sw.ts` — push + notificationclick handlers
+- `src/hooks/usePushNotifications.ts` — hook subscribe/unsubscribe
+- `supabase/functions/send-push-notifs/index.ts` — Edge Function sem dependências npm
+- Profile page — toggle de ativação
+
+**Configuração pendente:** secrets no Supabase Dashboard (`SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`) + `NEXT_PUBLIC_VAPID_PUBLIC_KEY` no deploy de produção.
 
 **Estimativa total:** ~6h (2h badges + 4h push)
 
@@ -542,11 +557,11 @@ export const fipeService = {
 | 9.5 | Correção do `maintenance_date NOT NULL` | ✅ | ~1h |
 | 9.6 | Botões de Transição de Status (Workflow) | ✅ | ~1h30 |
 | 9.7 | Notificações — Badges in-app | ✅ | ~2h |
-| 9.8 | Notificações — Web Push | ❌ | ~4h |
+| 9.8 | Notificações — Web Push | ✅ | ~4h — Edge Function `send-push-notifs` + SW + toggle no perfil |
 | 9.9 | Select de Veículo em Cascata (Brasil API) | ❌ | ~4h |
 | 9.10 | Módulo de Combustível | ✅ | ~5h |
 
-**Total restante:** ~8h
+**Total restante:** ~4h
 
 ---
 

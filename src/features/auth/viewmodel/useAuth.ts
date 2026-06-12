@@ -48,5 +48,15 @@ export function useAuthViewModel() {
     }
   }, []);
 
-  return { signUp, signIn, signOut, resetPassword };
+  const updatePassword = useCallback(async (password: string) => {
+    try {
+      const result = await authService.updatePassword(password);
+      return { success: true, data: result };
+    } catch (error) {
+      const authError = error as AuthError;
+      return { success: false, error: authError.message || "Erro ao redefinir senha" };
+    }
+  }, []);
+
+  return { signUp, signIn, signOut, resetPassword, updatePassword };
 }

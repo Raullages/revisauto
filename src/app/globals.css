@@ -25,6 +25,17 @@ body {
   font-family: var(--font-sans, Arial, Helvetica, sans-serif);
 }
 
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* PWA safe area padding */
 @supports (padding-top: env(safe-area-inset-top)) {
   .pb-safe {

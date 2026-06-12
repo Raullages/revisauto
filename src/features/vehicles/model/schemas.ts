@@ -2,6 +2,16 @@ import { z } from "zod";
 
 const currentYear = new Date().getFullYear();
 
+const requiredIntegerField = (_requiredMessage: string, minMessage: string) =>
+  z.preprocess(
+    (value) => {
+      if (value === "" || value == null) return undefined;
+      if (typeof value === "string") return Number(value);
+      return value;
+    },
+    z.number().int().min(0, minMessage),
+  );
+
 export const vehicleSchema = z.object({
   brand: z.string().min(1, "Marca é obrigatória").max(100),
   model: z.string().min(1, "Modelo é obrigatório").max(100),
@@ -13,7 +23,7 @@ export const vehicleSchema = z.object({
     .enum(["", "Gasolina", "Etanol", "Flex", "Diesel", "GNV", "Elétrico", "Híbrido"])
     .optional()
     .or(z.literal("")),
-  current_km: z.coerce.number().int().min(0, "KM deve ser >= 0"),
+  current_km: requiredIntegerField("KM atual é obrigatório", "KM deve ser >= 0"),
   chassis: z.string().max(30).optional().or(z.literal("")),
   renavam: z.string().max(20).optional().or(z.literal("")),
   acquisition_date: z.string().optional().or(z.literal("")),

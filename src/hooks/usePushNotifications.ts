@@ -65,15 +65,17 @@ export function usePushNotifications() {
       const auth = subscription.getKey("auth");
       if (!key || !auth) throw new Error("Invalid subscription keys");
 
-      await supabase.from("push_subscriptions").upsert(
+      const { error } = await supabase.from("push_subscriptions").upsert(
         {
           user_id: user.id,
           endpoint: subscription.endpoint,
           p256dh: btoa(String.fromCharCode(...new Uint8Array(key))),
           auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
         },
-        { onConflict: "user_id", ignoreDuplicates: false },
+        { onConflict: "endpoint", ignoreDuplicates: false },
       );
+
+      if (error) throw error;
 
       setSubscribed(true);
     } catch (err) {
@@ -92,17 +94,22 @@ export function usePushNotifications() {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
+      const endpoint = subscription?.endpoint;
+
       if (subscription) {
         await subscription.unsubscribe();
       }
 
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
+      if (user && endpoint) {
+        const { error } = await supabase
           .from("push_subscriptions")
           .delete()
-          .eq("user_id", user.id);
+          .eq("user_id", user.id)
+          .eq("endpoint", endpoint);
+
+        if (error) throw error;
       }
 
       setSubscribed(false);

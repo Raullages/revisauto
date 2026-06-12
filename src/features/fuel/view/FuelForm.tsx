@@ -1,12 +1,18 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { fuelSchema, type FuelFormData } from "../model/schemas";
 import { useVehicles } from "@/features/vehicles/viewmodel/useVehicles";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { FuelLog } from "../model/types";
+import {
+  formatCurrencyInput,
+  formatIntegerInput,
+  parseCurrencyInput,
+  parseIntegerInput,
+} from "@/utils/form-number-format";
 
 interface FuelFormProps {
   defaultValues?: Partial<FuelLog>;
@@ -31,6 +37,7 @@ export function FuelForm({
   const { data: vehicles } = useVehicles();
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -41,9 +48,9 @@ export function FuelForm({
       ? {
           vehicle_id: defaultValues.vehicle_id || "",
           date: defaultValues.date || "",
-          odometer_km: defaultValues.odometer_km ?? 0,
+          odometer_km: defaultValues.odometer_km ?? (undefined as unknown as number),
           liters: defaultValues.liters ?? 0,
-          total_cost: defaultValues.total_cost ?? 0,
+          total_cost: defaultValues.total_cost ?? (undefined as unknown as number),
           fuel_type: defaultValues.fuel_type || "gasolina",
           is_full_tank: defaultValues.is_full_tank ?? true,
           gas_station: defaultValues.gas_station || "",
@@ -52,9 +59,9 @@ export function FuelForm({
       : {
           vehicle_id: "",
           date: "",
-          odometer_km: 0,
+          odometer_km: undefined as unknown as number,
           liters: 0,
-          total_cost: 0,
+          total_cost: undefined as unknown as number,
           fuel_type: "gasolina",
           is_full_tank: true,
           gas_station: "",
@@ -92,12 +99,25 @@ export function FuelForm({
           {...register("date")}
         />
 
-        <Input
-          label="KM (hodômetro) *"
-          type="number"
-          placeholder="Ex: 50000"
-          error={errors.odometer_km?.message}
-          {...register("odometer_km")}
+        <Controller
+          control={control}
+          name="odometer_km"
+          render={({ field }) => (
+            <Input
+              label="KM (hodômetro) *"
+              type="text"
+              inputMode="numeric"
+              placeholder="Ex: 50.000"
+              error={errors.odometer_km?.message}
+              value={formatIntegerInput(field.value)}
+              onChange={(event) => {
+                field.onChange(parseIntegerInput(event.target.value) as unknown as number);
+              }}
+              onBlur={field.onBlur}
+              name={field.name}
+              ref={field.ref}
+            />
+          )}
         />
 
         <Input
@@ -109,13 +129,25 @@ export function FuelForm({
           {...register("liters")}
         />
 
-        <Input
-          label="Valor Total (R$) *"
-          type="number"
-          step="0.01"
-          placeholder="Ex: 250.00"
-          error={errors.total_cost?.message}
-          {...register("total_cost")}
+        <Controller
+          control={control}
+          name="total_cost"
+          render={({ field }) => (
+            <Input
+              label="Valor Total (R$) *"
+              type="text"
+              inputMode="decimal"
+              placeholder="Ex: R$ 250,00"
+              error={errors.total_cost?.message}
+              value={formatCurrencyInput(field.value)}
+              onChange={(event) => {
+                field.onChange(parseCurrencyInput(event.target.value) as unknown as number);
+              }}
+              onBlur={field.onBlur}
+              name={field.name}
+              ref={field.ref}
+            />
+          )}
         />
 
         <div>

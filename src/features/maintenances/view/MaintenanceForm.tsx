@@ -1,14 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { maintenanceSchema, type MaintenanceFormData } from "../model/schemas";
+import { maintenanceFormSchema, type MaintenanceFormData } from "../model/schemas";
 import { useVehicles } from "@/features/vehicles/viewmodel/useVehicles";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { Maintenance } from "../model/types";
+import {
+  formatCurrencyInput,
+  formatIntegerInput,
+  parseCurrencyInput,
+  parseIntegerInput,
+} from "@/utils/form-number-format";
 
 interface MaintenanceFormProps {
   defaultValues?: Partial<Maintenance>;
@@ -49,7 +55,7 @@ export function MaintenanceForm({
     formState: { errors },
   } = useForm<MaintenanceFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(maintenanceSchema) as any,
+    resolver: zodResolver(maintenanceFormSchema) as any,
     defaultValues: defaultValues
       ? {
           vehicle_id: defaultValues.vehicle_id || "",
@@ -59,8 +65,8 @@ export function MaintenanceForm({
           priority: defaultValues.priority || "medium",
           description: defaultValues.description || "",
           maintenance_date: defaultValues.maintenance_date || "",
-          vehicle_km: defaultValues.vehicle_km ?? 0,
-          amount: defaultValues.amount ?? 0,
+          vehicle_km: defaultValues.vehicle_km ?? (undefined as unknown as number),
+          amount: defaultValues.amount ?? (undefined as unknown as number),
           workshop: defaultValues.workshop || "",
           notes: defaultValues.notes || "",
           next_change_km: defaultValues.next_change_km ?? ("" as unknown as number),
@@ -74,8 +80,8 @@ export function MaintenanceForm({
           priority: "medium",
           description: "",
           maintenance_date: "",
-          vehicle_km: 0,
-          amount: 0,
+          vehicle_km: undefined as unknown as number,
+          amount: undefined as unknown as number,
           workshop: "",
           notes: "",
           next_change_km: "" as unknown as number,
@@ -180,21 +186,46 @@ export function MaintenanceForm({
           />
         )}
 
-        <Input
-          label="KM do Veículo"
-          type="number"
-          placeholder="Ex: 50000"
-          error={errors.vehicle_km?.message}
-          {...register("vehicle_km")}
+        <Controller
+          control={control}
+          name="vehicle_km"
+          render={({ field }) => (
+            <Input
+              label="KM do Veículo *"
+              type="text"
+              inputMode="numeric"
+              placeholder="Ex: 50.000"
+              error={errors.vehicle_km?.message}
+              value={formatIntegerInput(field.value)}
+              onChange={(event) => {
+                field.onChange(parseIntegerInput(event.target.value) as unknown as number);
+              }}
+              onBlur={field.onBlur}
+              name={field.name}
+              ref={field.ref}
+            />
+          )}
         />
 
-        <Input
-          label="Valor (R$)"
-          type="number"
-          step="0.01"
-          placeholder="Ex: 250.00"
-          error={errors.amount?.message}
-          {...register("amount")}
+        <Controller
+          control={control}
+          name="amount"
+          render={({ field }) => (
+            <Input
+              label="Valor (R$) *"
+              type="text"
+              inputMode="decimal"
+              placeholder="Ex: R$ 250,00"
+              error={errors.amount?.message}
+              value={formatCurrencyInput(field.value)}
+              onChange={(event) => {
+                field.onChange(parseCurrencyInput(event.target.value) as unknown as number);
+              }}
+              onBlur={field.onBlur}
+              name={field.name}
+              ref={field.ref}
+            />
+          )}
         />
 
         <Input
@@ -222,12 +253,25 @@ export function MaintenanceForm({
           Controle de próxima troca
         </legend>
         <div className="grid gap-4 sm:grid-cols-2 mt-2">
-          <Input
-            label="KM da próxima troca"
-            type="number"
-            placeholder="Ex: 60000"
-            error={errors.next_change_km?.message}
-            {...register("next_change_km")}
+          <Controller
+            control={control}
+            name="next_change_km"
+            render={({ field }) => (
+              <Input
+                label="KM da próxima troca"
+                type="text"
+                inputMode="numeric"
+                placeholder="Ex: 60.000"
+                error={errors.next_change_km?.message}
+                value={formatIntegerInput(field.value)}
+                onChange={(event) => {
+                  field.onChange(parseIntegerInput(event.target.value) as unknown as number);
+                }}
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
+              />
+            )}
           />
           <Input
             label="Data da próxima troca"

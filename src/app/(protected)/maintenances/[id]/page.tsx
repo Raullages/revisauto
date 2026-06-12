@@ -6,6 +6,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { useMaintenance, useDeleteMaintenance, useUpdateMaintenance } from "@/features/maintenances/viewmodel/useMaintenances";
 import type { MaintenanceStatus } from "@/features/maintenances/model/types";
+import type { MaintenanceFormData } from "@/features/maintenances/model/schemas";
 import { attachmentService } from "@/features/maintenances/services/attachment.service";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -128,7 +129,13 @@ export default function MaintenanceDetailPage() {
 
   const handleTransition = async (newStatus: MaintenanceStatus) => {
     try {
-      await updateMaintenance({ id: maintenance.id, data: { status: newStatus } });
+      const data: Partial<MaintenanceFormData> = { status: newStatus };
+
+      if ((newStatus === "scheduled" || newStatus === "completed") && !maintenance.maintenance_date) {
+        data.maintenance_date = new Date().toISOString().split("T")[0];
+      }
+
+      await updateMaintenance({ id: maintenance.id, data });
       toast.success(`Status alterado para ${statusLabel[newStatus]}`);
     } catch {
       toast.error("Erro ao alterar status");
