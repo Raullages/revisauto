@@ -1,0 +1,9 @@
+{
+  "appId": "com.pessoauto.app",
+  "appName": "PessoAuto",
+  "webDir": "dist/capacitor",
+  "server": {
+    "url": "https://pessoauto.vercel.app",
+    "cleartext": false
+  }
+}

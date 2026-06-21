@@ -10,7 +10,8 @@
     "cap:sync": "npx cap sync",
     "cap:sync:android": "npx cap sync android",
     "cap:open:android": "npx cap open android",
-    "cap:run:android": "npx cap run android"
+    "cap:run:android": "npx cap run android",
+    "cap:assets": "npx capacitor-assets generate --android"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.7",
@@ -32,6 +33,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.6.7",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
