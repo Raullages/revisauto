@@ -38,7 +38,15 @@ input[type="number"] {
 
 /* PWA safe area padding */
 @supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
   }
 }
