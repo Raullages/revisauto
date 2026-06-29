@@ -20,6 +20,10 @@ function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function getPricePerLiter(totalCost: number, liters: number, pricePerLiter: number | null) {
+  return pricePerLiter ?? (totalCost / liters);
+}
+
 export default function FuelPage() {
   const router = useRouter();
   const { data: fuelLogs, isLoading } = useFuelLogs();
@@ -187,6 +191,9 @@ export default function FuelPage() {
                   <div className="text-right shrink-0">
                     <p className="font-semibold text-gray-900 dark:text-white">
                       {formatCurrency(f.total_cost)}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatCurrency(getPricePerLiter(f.total_cost, f.liters, f.price_per_liter))}/L
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {f.liters} L — {f.odometer_km.toLocaleString()} km
