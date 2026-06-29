@@ -338,3 +338,22 @@ Consideraremos a iniciativa bem sucedida quando tivermos:
 ## Proximo Passo
 
 Proximo passo pratico: iniciar a `Fase 1`, configurando o `Capacitor` no projeto e preparando o primeiro app Android de teste.
+
+## Ponto De Retomada
+
+Estado ao parar:
+
+- build remota do `APK` via GitHub Actions ja validada
+- app Android ja instalado e testado em celular
+- ajuste de safe area no topo ja aplicado no app web/mobile
+- branding Android foi preparado com novo `splash` e novo `icone`
+- branch de trabalho correta e `feat/capacitor-android`
+- conflitos dessa branch ja foram resolvidos
+- workflow nao precisa mudar neste momento
+
+Retomar por aqui:
+
+1. gerar um novo `APK` na branch `feat/capacitor-android`
+2. validar no celular o novo `splash` inicial
+3. validar no celular o novo `icone` do app
+4. seguir com ajustes finos de layout mobile
