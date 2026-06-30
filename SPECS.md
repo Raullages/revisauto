@@ -518,6 +518,77 @@ export const fipeService = {
 
 ---
 
+### 9.9 Lembrete Inteligente de Abastecimento por Localização
+
+Lembrete mobile-first para sugerir o registro de abastecimento quando o usuário permanece parado próximo a um posto.
+
+**Status atual:** ⚠️ Base funcional implementada, ainda pendente validação em campo e ajustes finos de heurística.
+
+**O que já foi implementado:**
+
+- Opt-in no perfil em `/profile`
+  - toggle `Lembrete inteligente de abastecimento`
+  - botões `Permitir localização` e `Permitir notificações`
+  - status persistido de permissões
+- Preferências no banco (`profiles`)
+  - `fuel_station_reminders_enabled`
+  - `location_permission_status`
+  - `push_permission_status`
+  - `last_fuel_reminder_at`
+  - `last_fuel_reminder_lat`
+  - `last_fuel_reminder_lng`
+- Cache de postos ANP
+  - tabela `public.fuel_stations`
+  - carga inicial aplicada no projeto Supabase: `1262` postos
+- Backend
+  - `GET /api/fuel-stations/nearby` — busca postos próximos a partir do cache local
+  - `POST /api/fuel-stations/sync` — sincronização de páginas da ANP para o cache
+  - `POST /api/fuel-stations/should-notify` — decisão centralizada com regras mínimas
+- Cliente
+  - `useFuelStationReminder` para preferências e permissões
+  - `FuelStationReminderProvider` com detecção simples de parada em foreground
+  - notificação local com deep link para `/fuel/new?source=location-reminder`
+- Service Worker
+  - suporte a `notification.data.url` para deep link genérico
+
+**Regras mínimas já ligadas no `should-notify`:**
+
+- recurso precisa estar ativado
+- localização precisa estar concedida
+- parada mínima de `90s`
+- precisão máxima de `100m`
+- busca de posto em raio de `120m`
+- cooldown de `6h` para lembrete recente
+- bloqueio se houve abastecimento recente nas últimas `3h`
+
+**Arquivos principais:**
+
+- `src/app/(protected)/profile/page.tsx`
+- `src/hooks/useFuelStationReminder.ts`
+- `src/components/providers/FuelStationReminderProvider.tsx`
+- `src/app/api/fuel-stations/nearby/route.ts`
+- `src/app/api/fuel-stations/sync/route.ts`
+- `src/app/api/fuel-stations/should-notify/route.ts`
+- `src/lib/anp/fuel-stations.ts`
+- `src/lib/fuel-stations.ts`
+- `src/lib/geo.ts`
+- `src/app/sw.ts`
+- `supabase/migrations/20240604000007_location_reminder_preferences.sql`
+- `supabase/migrations/20240604000008_fuel_stations_cache.sql`
+
+**O que falta fazer:**
+
+- testar em dispositivo com geolocalização real
+- ajustar thresholds de parada/raio/precisão com base no teste real
+- decidir se o recurso ficará só no app Android/Capacitor ou também no PWA
+- ampliar a carga da ANP se a região de teste não estiver coberta pela carga inicial
+- opcional: registrar eventos dedicados de lembrete (`fuel_reminder_events`) em vez de usar apenas `profiles` + `notifications`
+- opcional: converter automaticamente o lembrete em contexto de abastecimento salvo
+
+**Estimativa restante:** ~2h a ~6h, dependendo do resultado dos testes em campo e da necessidade de ampliar a heurística.
+
+---
+
 ## 10. Fora do Escopo (confirmado)
 
 - ❌ OCR / IA
@@ -560,8 +631,9 @@ export const fipeService = {
 | 9.8 | Notificações — Web Push | ✅ | ~4h — Edge Function `send-push-notifs` + SW + toggle no perfil |
 | 9.9 | Select de Veículo em Cascata (Brasil API) | ❌ | ~4h |
 | 9.10 | Módulo de Combustível | ✅ | ~5h |
+| 9.11 | Lembrete Inteligente por Localização | ⚠️ | base pronta; falta teste real e ajuste fino |
 
-**Total restante:** ~4h
+**Total restante:** ~4h + validação em campo da feature de localização
 
 ---
 

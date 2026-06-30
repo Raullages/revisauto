@@ -4,11 +4,15 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
+import { Button } from "@/components/ui/Button";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<{ email?: string; fullName?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const push = usePushNotifications();
+  const reminder = useFuelStationReminder();
 
   useEffect(() => {
     const supabase = createClient();
@@ -32,6 +36,56 @@ export default function ProfilePage() {
       }
     });
   }, []);
+
+  const handleReminderToggle = async () => {
+    try {
+      const wasEnabled = reminder.preferences.fuel_station_reminders_enabled;
+      const isEnabled = await reminder.setEnabled(!wasEnabled);
+
+      if (wasEnabled) {
+        toast.success("Lembrete inteligente desativado.");
+        return;
+      }
+
+      if (isEnabled) {
+        toast.success("Lembrete inteligente ativado.");
+      }
+    } catch {
+      toast.error("Erro ao atualizar o lembrete inteligente.");
+    }
+  };
+
+  const handleLocationPermission = async () => {
+    try {
+      const status = await reminder.requestLocationPermission();
+
+      if (status === "granted") {
+        toast.success("Permissão de localização concedida.");
+        return;
+      }
+
+      toast.error("A localização continua indisponível para o recurso.");
+    } catch {
+      toast.error("Erro ao solicitar a permissão de localização.");
+    }
+  };
+
+  const handleNotificationPermission = async () => {
+    try {
+      const status = await reminder.requestNotificationPermission();
+
+      if (status === "granted") {
+        toast.success("Permissão de notificação concedida.");
+        return;
+      }
+
+      toast.error("As notificações continuam bloqueadas.");
+    } catch {
+      toast.error("Erro ao solicitar a permissão de notificação.");
+    }
+  };
+
+  const reminderEnabled = reminder.preferences.fuel_station_reminders_enabled;
 
   return (
     <div className="mx-auto max-w-lg">
@@ -59,12 +113,12 @@ export default function ProfilePage() {
               </svg>
             </div>
             <div>
-             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {user?.fullName || "—"}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {user?.email || "—"}
-                </p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {user?.fullName || "—"}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {user?.email || "—"}
+              </p>
             </div>
           </div>
         )}
@@ -105,6 +159,73 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-white">
+              Lembrete inteligente de abastecimento
+            </h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Usa sua localização apenas para preparar a futura detecção de parada próxima a posto e abrir o registro de abastecimento mais rápido.
+            </p>
+          </div>
+          <button
+            onClick={handleReminderToggle}
+            disabled={reminder.loading || reminder.saving || !reminder.isSupported}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              reminderEnabled ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"
+            } ${reminder.loading || reminder.saving || !reminder.isSupported ? "opacity-50" : ""}`}
+            role="switch"
+            aria-checked={reminderEnabled}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                reminderEnabled ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+          <p>
+            Status da localização: <span className="font-medium">{reminder.preferences.location_permission_status}</span>
+          </p>
+          <p>
+            Status das notificações: <span className="font-medium">{reminder.preferences.push_permission_status}</span>
+          </p>
+          {reminder.preferences.last_fuel_reminder_at && (
+            <p>
+              Último lembrete registrado: <span className="font-medium">{new Date(reminder.preferences.last_fuel_reminder_at).toLocaleString("pt-BR")}</span>
+            </p>
+          )}
+          {reminder.error && (
+            <p className="text-sm text-red-500 dark:text-red-400">{reminder.error}</p>
+          )}
+          {!reminder.isSupported && (
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              Este dispositivo ou navegador não expõe geolocalização para o recurso.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            onClick={handleLocationPermission}
+            disabled={reminder.loading || reminder.saving || !reminder.isSupported}
+          >
+            Permitir localização
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleNotificationPermission}
+            disabled={reminder.loading || reminder.saving}
+          >
+            Permitir notificações
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

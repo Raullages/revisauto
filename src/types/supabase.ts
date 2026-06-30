@@ -97,6 +97,78 @@ export type Database = {
           },
         ];
       };
+      fuel_stations: {
+        Row: {
+          accuracy_estimate: string | null;
+          address: string | null;
+          address_complement: string | null;
+          brand: string | null;
+          city: string | null;
+          cnpj: string | null;
+          created_at: string;
+          data_obtained_at: string | null;
+          id: string;
+          last_synced_at: string;
+          latitude: number;
+          longitude: number;
+          name: string;
+          neighborhood: string | null;
+          products: Json;
+          source: string;
+          source_id: string;
+          state: string | null;
+          updated_at: string;
+          validation: string | null;
+          zip_code: string | null;
+        };
+        Insert: {
+          accuracy_estimate?: string | null;
+          address?: string | null;
+          address_complement?: string | null;
+          brand?: string | null;
+          city?: string | null;
+          cnpj?: string | null;
+          created_at?: string;
+          data_obtained_at?: string | null;
+          id?: string;
+          last_synced_at?: string;
+          latitude: number;
+          longitude: number;
+          name: string;
+          neighborhood?: string | null;
+          products?: Json;
+          source?: string;
+          source_id: string;
+          state?: string | null;
+          updated_at?: string;
+          validation?: string | null;
+          zip_code?: string | null;
+        };
+        Update: {
+          accuracy_estimate?: string | null;
+          address?: string | null;
+          address_complement?: string | null;
+          brand?: string | null;
+          city?: string | null;
+          cnpj?: string | null;
+          created_at?: string;
+          data_obtained_at?: string | null;
+          id?: string;
+          last_synced_at?: string;
+          latitude?: number;
+          longitude?: number;
+          name?: string;
+          neighborhood?: string | null;
+          products?: Json;
+          source?: string;
+          source_id?: string;
+          state?: string | null;
+          updated_at?: string;
+          validation?: string | null;
+          zip_code?: string | null;
+        };
+        Relationships: [];
+      };
       maintenance_categories: {
         Row: {
           id: string;
@@ -230,20 +302,38 @@ export type Database = {
         Row: {
           created_at: string;
           email: string;
+          fuel_station_reminders_enabled: boolean;
           full_name: string;
           id: string;
+          last_fuel_reminder_at: string | null;
+          last_fuel_reminder_lat: number | null;
+          last_fuel_reminder_lng: number | null;
+          location_permission_status: string;
+          push_permission_status: string;
         };
         Insert: {
           created_at?: string;
           email: string;
+          fuel_station_reminders_enabled?: boolean;
           full_name?: string;
           id: string;
+          last_fuel_reminder_at?: string | null;
+          last_fuel_reminder_lat?: number | null;
+          last_fuel_reminder_lng?: number | null;
+          location_permission_status?: string;
+          push_permission_status?: string;
         };
         Update: {
           created_at?: string;
           email?: string;
+          fuel_station_reminders_enabled?: boolean;
           full_name?: string;
           id?: string;
+          last_fuel_reminder_at?: string | null;
+          last_fuel_reminder_lat?: number | null;
+          last_fuel_reminder_lng?: number | null;
+          location_permission_status?: string;
+          push_permission_status?: string;
         };
         Relationships: [];
       };

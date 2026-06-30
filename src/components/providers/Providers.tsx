@@ -3,6 +3,7 @@
 import { ThemeProvider } from "@/hooks/useTheme";
 import { QueryProvider } from "./QueryProvider";
 import { ToastProvider } from "./ToastProvider";
+import { ServiceWorkerNavigationProvider } from "./ServiceWorkerNavigationProvider";
 import type { ReactNode } from "react";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -10,6 +11,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <QueryProvider>
         <ToastProvider />
+        <ServiceWorkerNavigationProvider />
         {children}
       </QueryProvider>
     </ThemeProvider>

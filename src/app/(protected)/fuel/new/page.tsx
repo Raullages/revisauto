@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useCreateFuelLog } from "@/features/fuel/viewmodel/useFuel";
@@ -9,7 +10,9 @@ import type { FuelFormData } from "@/features/fuel/model/schemas";
 
 export default function NewFuelPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { mutateAsync: createFuelLog, isPending } = useCreateFuelLog();
+  const openedFromReminder = searchParams.get("source") === "location-reminder";
 
   const handleSubmit = async (data: FuelFormData) => {
     try {
@@ -39,6 +42,12 @@ export default function NewFuelPage() {
       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Registre os dados do abastecimento
       </p>
+
+      {openedFromReminder && (
+        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+          Você abriu esta tela a partir de um lembrete inteligente de abastecimento.
+        </div>
+      )}
 
       <div className="mt-6">
         <FuelForm

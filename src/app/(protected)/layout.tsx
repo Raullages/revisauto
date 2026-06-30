@@ -4,12 +4,14 @@ import { AuthGuard } from "@/components/guards/AuthGuard";
 import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { FuelStationReminderProvider } from "@/components/providers/FuelStationReminderProvider";
 import type { ReactNode } from "react";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
     <AuthGuard>
       <div className="flex min-h-screen flex-col">
+        <FuelStationReminderProvider />
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />

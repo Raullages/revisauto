@@ -26,7 +26,7 @@ self.addEventListener("push", (event: PushEvent) => {
 
   try {
     const payload = event.data.json();
-    const { title, body, maintenanceId, tag } = payload;
+    const { title, body, maintenanceId, tag, url } = payload;
 
     event.waitUntil(
       self.registration.showNotification(title, {
@@ -34,7 +34,7 @@ self.addEventListener("push", (event: PushEvent) => {
         tag: tag || "pessoauto-maintenance",
         icon: "/icons/icon-192x192.png",
         badge: "/icons/icon-192x192.png",
-        data: { maintenanceId },
+        data: { maintenanceId, url },
         requireInteraction: true,
       } as NotificationOptions),
     );
@@ -54,9 +54,9 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
   event.notification.close();
 
   const maintenanceId = event.notification.data?.maintenanceId;
-  const target = maintenanceId
+  const target = event.notification.data?.url || (maintenanceId
     ? `/maintenances/${maintenanceId}`
-    : "/maintenances";
+    : "/maintenances");
 
   event.waitUntil(
     self.clients.matchAll({ type: "window" }).then((clients) => {
