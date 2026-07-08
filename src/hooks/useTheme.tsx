@@ -1,5 +1,7 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
+import { StatusBar, Style } from "@capacitor/status-bar";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 type Theme = "light" | "dark";
@@ -11,6 +13,25 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
+function applyTheme(theme: Theme) {
+  const isDark = theme === "dark";
+
+  document.documentElement.classList.toggle("dark", isDark);
+
+  const themeColor = isDark ? "#111827" : "#ffffff";
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", themeColor);
+
+  if (Capacitor.getPlatform() !== "ios") {
+    return;
+  }
+
+  void StatusBar.setOverlaysWebView({ overlay: false });
+  void StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+  void StatusBar.setBackgroundColor({ color: themeColor });
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
@@ -18,19 +39,33 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("theme") as Theme | null;
     if (stored) {
       setTheme(stored);
-      document.documentElement.classList.toggle("dark", stored === "dark");
     } else {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? "dark" : "light");
-      document.documentElement.classList.toggle("dark", prefersDark);
+      const nextTheme = prefersDark ? "dark" : "light";
+      setTheme(nextTheme);
     }
   }, []);
+
+  useEffect(() => {
+    applyTheme(theme);
+
+    if (Capacitor.getPlatform() !== "ios") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      applyTheme(theme);
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [theme]);
 
   const toggle = () => {
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
       localStorage.setItem("theme", next);
-      document.documentElement.classList.toggle("dark", next === "dark");
       return next;
     });
   };

@@ -58,5 +58,15 @@ export function useAuthViewModel() {
     }
   }, []);
 
-  return { signUp, signIn, signOut, resetPassword, updatePassword };
+  const syncSession = useCallback(async () => {
+    try {
+      const result = await authService.syncSession();
+      return { success: true, data: result };
+    } catch (error) {
+      const authError = error as AuthError;
+      return { success: false, error: authError.message || "Erro ao sincronizar sessao" };
+    }
+  }, []);
+
+  return { signUp, signIn, signOut, resetPassword, updatePassword, syncSession };
 }

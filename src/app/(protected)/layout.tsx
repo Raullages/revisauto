@@ -10,13 +10,14 @@ import type { ReactNode } from "react";
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
     <AuthGuard>
-      <div className="flex min-h-screen flex-col">
+      <div className="flex h-dvh flex-col overflow-hidden">
         <FuelStationReminderProvider />
         <Navbar />
-        <div className="flex flex-1">
+        <div className="h-14 shrink-0" />
+        <div className="flex min-h-0 flex-1">
           <Sidebar />
-          <main className="flex-1 overflow-x-hidden pb-20 md:pb-6">
-            <div className="mx-auto max-w-5xl p-4 md:p-6">{children}</div>
+          <main className="ios-scroll flex-1 overflow-x-hidden overflow-y-auto md:pb-6">
+            <div className="mx-auto max-w-5xl p-4 pb-20 pb-safe md:p-6">{children}</div>
           </main>
         </div>
         <BottomNav />

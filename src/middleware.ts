@@ -29,18 +29,7 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const protectedPaths = ["/dashboard", "/vehicles", "/maintenances", "/fuel", "/profile"];
-    const isProtectedRoute = protectedPaths.some((path) =>
-      request.nextUrl.pathname.startsWith(path),
-    );
-
-    if (!user && isProtectedRoute) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/auth/login";
-      return NextResponse.redirect(url);
-    }
+    await supabase.auth.getUser();
   } catch {
     // Supabase indisponivel — deixa passar (AuthGuard protege no client)
   }

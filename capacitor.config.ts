@@ -9,11 +9,20 @@ const serverUrl =
   process.env.NEXT_PUBLIC_APP_URL ??
   process.env.NEXT_PUBLIC_SITE_URL;
 
+const useRemoteServer = process.env.CAPACITOR_LIVE_RELOAD === "true" && !!serverUrl;
+
 const config: CapacitorConfig = {
   appId: "com.pessoauto.app",
   appName: "PessoAuto",
   webDir: "dist/capacitor",
-  server: serverUrl
+  plugins: {
+    StatusBar: {
+      overlaysWebView: false,
+      style: "DEFAULT",
+      backgroundColor: "#ffffff",
+    },
+  },
+  server: useRemoteServer
     ? {
         url: serverUrl,
         cleartext: serverUrl.startsWith("http://"),

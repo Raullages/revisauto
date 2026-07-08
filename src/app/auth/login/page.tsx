@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/Input";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const router = useRouter();
-  const { signIn } = useAuthViewModel();
+  const { signIn, syncSession } = useAuthViewModel();
 
   const {
     register,
@@ -23,6 +24,29 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      const result = await syncSession();
+
+      if (!active) {
+        return;
+      }
+
+      if (result.success && result.data) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      setCheckingSession(false);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [router, syncSession]);
 
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
@@ -39,6 +63,10 @@ export default function LoginPage() {
     router.push("/dashboard");
     setLoading(false);
   };
+
+  if (checkingSession) {
+    return <div className="flex min-h-screen items-center justify-center px-4" />;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
