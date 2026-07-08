@@ -17,7 +17,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
         <div className="flex min-h-0 flex-1">
           <Sidebar />
           <main className="ios-scroll flex-1 overflow-x-hidden overflow-y-auto md:pb-6">
-            <div className="mx-auto max-w-5xl p-4 pb-20 pb-safe md:p-6">{children}</div>
+            <div className="mx-auto max-w-5xl p-4 pb-[calc(5.5rem+var(--safe-area-bottom))] md:p-6 md:pb-6">{children}</div>
           </main>
         </div>
         <BottomNav />

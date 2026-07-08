@@ -3,6 +3,13 @@
 import { useEffect, useRef } from "react";
 import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
 import { getDistanceInMeters } from "@/lib/geo";
+import type { Position } from "@capacitor/geolocation";
+import {
+  addReminderNotificationListener,
+  clearDeviceWatch,
+  showReminderNotification,
+  watchDevicePosition,
+} from "@/lib/mobile/reminder";
 
 const MIN_STOP_RADIUS_METERS = 30;
 const RESET_STOP_RADIUS_METERS = 50;
@@ -28,51 +35,34 @@ type ShouldNotifyResponse = {
   };
 };
 
-async function showFuelReminderNotification(notification: NonNullable<ShouldNotifyResponse["notification"]>) {
-  if (!("Notification" in window) || Notification.permission !== "granted") {
-    return;
-  }
-
-  if ("serviceWorker" in navigator) {
-    const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification(notification.title, {
-      body: notification.body,
-      tag: notification.tag ?? "fuel-reminder",
-      icon: "/icons/icon-192x192.png",
-      badge: "/icons/icon-192x192.png",
-      data: { url: notification.url },
-      requireInteraction: true,
-    });
-    return;
-  }
-
-  const browserNotification = new Notification(notification.title, {
-    body: notification.body,
-    tag: notification.tag,
-  });
-
-  browserNotification.onclick = () => {
-    window.focus();
-    window.location.href = notification.url;
-  };
-}
-
 export function FuelStationReminderProvider() {
   const reminder = useFuelStationReminder();
-  const watchIdRef = useRef<number | null>(null);
+  const watchIdRef = useRef<string | null>(null);
   const checkingRef = useRef(false);
   const stopCandidateRef = useRef<StopCandidate | null>(null);
 
   useEffect(() => {
+    let listenerHandle: { remove: () => Promise<void> } | null = null;
+
+    void (async () => {
+      listenerHandle = await addReminderNotificationListener();
+    })();
+
+    return () => {
+      void listenerHandle?.remove();
+    };
+  }, []);
+
+  useEffect(() => {
     if (
       reminder.loading ||
+      !reminder.isSupported ||
       !reminder.preferences.fuel_station_reminders_enabled ||
       reminder.preferences.location_permission_status !== "granted" ||
-      reminder.preferences.push_permission_status !== "granted" ||
-      !("geolocation" in navigator)
+      reminder.preferences.push_permission_status !== "granted"
     ) {
       if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
+        void clearDeviceWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
       stopCandidateRef.current = null;
@@ -80,7 +70,7 @@ export function FuelStationReminderProvider() {
       return;
     }
 
-    const evaluateStop = async (position: GeolocationPosition) => {
+    const evaluateStop = async (position: GeolocationPosition | Position) => {
       if (checkingRef.current) {
         return;
       }
@@ -116,7 +106,7 @@ export function FuelStationReminderProvider() {
           return;
         }
 
-        await showFuelReminderNotification(payload.notification);
+        await showReminderNotification(payload.notification);
         reminder.refresh();
       } catch {
         stopCandidateRef.current = { ...candidate, evaluated: true };
@@ -125,70 +115,72 @@ export function FuelStationReminderProvider() {
       }
     };
 
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        if (position.coords.accuracy > MAX_ACCURACY_METERS) {
-          return;
-        }
+    void (async () => {
+      watchIdRef.current = await watchDevicePosition(
+        {
+          enableHighAccuracy: true,
+          maximumAge: 15000,
+          timeout: 20000,
+        },
+        (position) => {
+          if (position.coords.accuracy > MAX_ACCURACY_METERS) {
+            return;
+          }
 
-        if (typeof position.coords.speed === "number" && position.coords.speed > MOVING_SPEED_MPS) {
+          if (typeof position.coords.speed === "number" && position.coords.speed > MOVING_SPEED_MPS) {
+            stopCandidateRef.current = null;
+            return;
+          }
+
+          const candidate = stopCandidateRef.current;
+          if (!candidate) {
+            stopCandidateRef.current = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              startedAt: Date.now(),
+              evaluated: false,
+            };
+            return;
+          }
+
+          const distanceFromAnchor = getDistanceInMeters(
+            candidate.latitude,
+            candidate.longitude,
+            position.coords.latitude,
+            position.coords.longitude,
+          );
+
+          if (distanceFromAnchor > RESET_STOP_RADIUS_METERS) {
+            stopCandidateRef.current = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              startedAt: Date.now(),
+              evaluated: false,
+            };
+            return;
+          }
+
+          if (distanceFromAnchor <= MIN_STOP_RADIUS_METERS) {
+            void evaluateStop(position);
+            return;
+          }
+
+          stopCandidateRef.current = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            startedAt: Date.now(),
+            evaluated: false,
+          };
+        },
+        () => {
           stopCandidateRef.current = null;
-          return;
-        }
-
-        const candidate = stopCandidateRef.current;
-        if (!candidate) {
-          stopCandidateRef.current = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            startedAt: Date.now(),
-            evaluated: false,
-          };
-          return;
-        }
-
-        const distanceFromAnchor = getDistanceInMeters(
-          candidate.latitude,
-          candidate.longitude,
-          position.coords.latitude,
-          position.coords.longitude,
-        );
-
-        if (distanceFromAnchor > RESET_STOP_RADIUS_METERS) {
-          stopCandidateRef.current = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            startedAt: Date.now(),
-            evaluated: false,
-          };
-          return;
-        }
-
-        if (distanceFromAnchor <= MIN_STOP_RADIUS_METERS) {
-          void evaluateStop(position);
-          return;
-        }
-
-        stopCandidateRef.current = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          startedAt: Date.now(),
-          evaluated: false,
-        };
-      },
-      () => {
-        stopCandidateRef.current = null;
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 15000,
-        timeout: 20000,
-      },
-    );
+        },
+      );
+    })();
 
     return () => {
       if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
+        void clearDeviceWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
       stopCandidateRef.current = null;
@@ -196,6 +188,7 @@ export function FuelStationReminderProvider() {
     };
   }, [
     reminder,
+    reminder.isSupported,
     reminder.loading,
     reminder.preferences.fuel_station_reminders_enabled,
     reminder.preferences.location_permission_status,

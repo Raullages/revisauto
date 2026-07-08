@@ -1,12 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
 import { Button } from "@/components/ui/Button";
 import toast from "react-hot-toast";
+
+function getPermissionStatusMeta(status: string) {
+  if (status === "granted") {
+    return {
+      label: "Ativado",
+      className: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+    };
+  }
+
+  if (status === "prompt" || status === "default") {
+    return {
+      label: "Pendente",
+      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    };
+  }
+
+  return {
+    label: "Desativado",
+    className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  };
+}
+
+function getSystemPermissionInstructions(permission: "location" | "notifications") {
+  const platform = Capacitor.getPlatform();
+
+  if (platform === "ios") {
+    return permission === "location"
+      ? "No iPhone: Ajustes > PessoAuto > Localização."
+      : "No iPhone: Ajustes > Notificações > PessoAuto."
+  }
+
+  if (platform === "android") {
+    return permission === "location"
+      ? "No Android: Configurações > Apps > PessoAuto > Permissões > Localização."
+      : "No Android: Configurações > Apps > PessoAuto > Notificações."
+  }
+
+  return permission === "location"
+    ? "Gerencie a permissão de localização nas configurações do navegador ou sistema."
+    : "Gerencie a permissão de notificações nas configurações do navegador ou sistema."
+}
 
 export default function ProfilePage() {
   const [user, setUser] = useState<{ email?: string; fullName?: string } | null>(null);
@@ -57,6 +99,13 @@ export default function ProfilePage() {
 
   const handleLocationPermission = async () => {
     try {
+      const locationPermissionStatus = reminder.preferences.location_permission_status;
+
+      if (locationPermissionStatus !== "prompt") {
+        toast(getSystemPermissionInstructions("location"), { icon: "" });
+        return;
+      }
+
       const status = await reminder.requestLocationPermission();
 
       if (status === "granted") {
@@ -64,7 +113,7 @@ export default function ProfilePage() {
         return;
       }
 
-      toast.error("A localização continua indisponível para o recurso.");
+      toast.success("Localização desativada para o lembrete inteligente.");
     } catch {
       toast.error("Erro ao solicitar a permissão de localização.");
     }
@@ -72,6 +121,13 @@ export default function ProfilePage() {
 
   const handleNotificationPermission = async () => {
     try {
+      const pushPermissionStatus = reminder.preferences.push_permission_status;
+
+      if (pushPermissionStatus !== "default") {
+        toast(getSystemPermissionInstructions("notifications"), { icon: "" });
+        return;
+      }
+
       const status = await reminder.requestNotificationPermission();
 
       if (status === "granted") {
@@ -79,13 +135,15 @@ export default function ProfilePage() {
         return;
       }
 
-      toast.error("As notificações continuam bloqueadas.");
+      toast.success("Notificações desativadas para o lembrete inteligente.");
     } catch {
       toast.error("Erro ao solicitar a permissão de notificação.");
     }
   };
 
   const reminderEnabled = reminder.preferences.fuel_station_reminders_enabled;
+  const locationStatus = getPermissionStatusMeta(reminder.preferences.location_permission_status);
+  const notificationStatus = getPermissionStatusMeta(reminder.preferences.push_permission_status);
 
   return (
     <div className="mx-auto max-w-lg">
@@ -167,7 +225,10 @@ export default function ProfilePage() {
               Lembrete inteligente de abastecimento
             </h3>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Usa sua localização apenas para preparar a futura detecção de parada próxima a posto e abrir o registro de abastecimento mais rápido.
+              Usa a localização do dispositivo e notificações do app para agilizar o registro de abastecimento.
+            </p>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Se a permissão já foi negada ou concedida, a alteração passa a ser feita nas configurações do sistema.
             </p>
           </div>
           <button
@@ -188,12 +249,18 @@ export default function ProfilePage() {
         </div>
 
         <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
-          <p>
-            Status da localização: <span className="font-medium">{reminder.preferences.location_permission_status}</span>
-          </p>
-          <p>
-            Status das notificações: <span className="font-medium">{reminder.preferences.push_permission_status}</span>
-          </p>
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700">
+            <span>Status da localização</span>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${locationStatus.className}`}>
+              {locationStatus.label}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700">
+            <span>Status das notificações</span>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${notificationStatus.className}`}>
+              {notificationStatus.label}
+            </span>
+          </div>
           {reminder.preferences.last_fuel_reminder_at && (
             <p>
               Último lembrete registrado: <span className="font-medium">{new Date(reminder.preferences.last_fuel_reminder_at).toLocaleString("pt-BR")}</span>
@@ -215,14 +282,18 @@ export default function ProfilePage() {
             onClick={handleLocationPermission}
             disabled={reminder.loading || reminder.saving || !reminder.isSupported}
           >
-            Permitir localização
+            {reminder.preferences.location_permission_status === "prompt"
+              ? "Permitir localização"
+              : "Ver ajustes de localização"}
           </Button>
           <Button
             variant="outline"
             onClick={handleNotificationPermission}
             disabled={reminder.loading || reminder.saving}
           >
-            Permitir notificações
+            {reminder.preferences.push_permission_status === "default"
+              ? "Permitir notificações"
+              : "Ver ajustes de notificações"}
           </Button>
         </div>
       </div>

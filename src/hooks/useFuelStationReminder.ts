@@ -2,9 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-type LocationPermissionStatus = "prompt" | "granted" | "denied" | "unsupported";
-type PushPermissionStatus = NotificationPermission | "unsupported";
+import {
+  getLocationPermissionStatus,
+  getPushPermissionStatus,
+  isReminderSupported,
+  requestLocationPermission as requestNativeOrBrowserLocationPermission,
+  requestPushPermission,
+  type LocationPermissionStatus,
+  type PushPermissionStatus,
+} from "@/lib/mobile/reminder";
 
 type ReminderPreferences = {
   fuel_station_reminders_enabled: boolean;
@@ -23,48 +29,6 @@ const defaultPreferences: ReminderPreferences = {
   last_fuel_reminder_lat: null,
   last_fuel_reminder_lng: null,
 };
-
-async function getLocationPermissionStatus(): Promise<LocationPermissionStatus> {
-  if (!("geolocation" in navigator)) {
-    return "unsupported";
-  }
-
-  if (!("permissions" in navigator) || typeof navigator.permissions.query !== "function") {
-    return "prompt";
-  }
-
-  try {
-    const result = await navigator.permissions.query({
-      name: "geolocation" as PermissionName,
-    });
-
-    if (result.state === "granted" || result.state === "denied") {
-      return result.state;
-    }
-
-    return "prompt";
-  } catch {
-    return "prompt";
-  }
-}
-
-function getPushPermissionStatus(): PushPermissionStatus {
-  if (!("Notification" in window)) {
-    return "unsupported";
-  }
-
-  return Notification.permission;
-}
-
-function requestCurrentPosition() {
-  return new Promise<GeolocationPosition>((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
-    });
-  });
-}
 
 export function useFuelStationReminder() {
   const [loading, setLoading] = useState(true);
@@ -95,7 +59,7 @@ export function useFuelStationReminder() {
 
   const syncPermissions = useCallback(async () => {
     const location_permission_status = await getLocationPermissionStatus();
-    const push_permission_status = getPushPermissionStatus();
+    const push_permission_status = await getPushPermissionStatus();
 
     setPreferences((current) => ({
       ...current,
@@ -111,7 +75,7 @@ export function useFuelStationReminder() {
     setError(null);
 
     try {
-      setIsSupported(typeof window !== "undefined" && "geolocation" in navigator);
+      setIsSupported(isReminderSupported());
 
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -160,7 +124,7 @@ export function useFuelStationReminder() {
   }, [refresh]);
 
   const requestLocationPermission = useCallback(async () => {
-    if (!("geolocation" in navigator)) {
+    if (!isReminderSupported()) {
       const next = { location_permission_status: "unsupported" as const };
       await persistPreferences(next);
       return next.location_permission_status;
@@ -170,13 +134,8 @@ export function useFuelStationReminder() {
     setError(null);
 
     try {
-      await requestCurrentPosition();
-      const next = { location_permission_status: "granted" as const };
-      await persistPreferences(next);
-      return next.location_permission_status;
-    } catch {
       const next = {
-        location_permission_status: await getLocationPermissionStatus(),
+        location_permission_status: await requestNativeOrBrowserLocationPermission(),
       };
       await persistPreferences(next);
       return next.location_permission_status;
@@ -186,7 +145,9 @@ export function useFuelStationReminder() {
   }, [persistPreferences]);
 
   const requestNotificationPermission = useCallback(async () => {
-    if (!("Notification" in window)) {
+    const currentStatus = await getPushPermissionStatus();
+
+    if (currentStatus === "unsupported") {
       const next = { push_permission_status: "unsupported" as const };
       await persistPreferences(next);
       return next.push_permission_status;
@@ -196,10 +157,41 @@ export function useFuelStationReminder() {
     setError(null);
 
     try {
-      const permission = await Notification.requestPermission();
+      const permission = await requestPushPermission();
       const next = { push_permission_status: permission };
       await persistPreferences(next);
       return next.push_permission_status;
+    } finally {
+      setSaving(false);
+    }
+  }, [persistPreferences]);
+
+  const disableLocationPermission = useCallback(async () => {
+    setSaving(true);
+    setError(null);
+
+    try {
+      await persistPreferences({
+        fuel_station_reminders_enabled: false,
+        location_permission_status: "denied",
+      });
+
+      return "denied" as const;
+    } finally {
+      setSaving(false);
+    }
+  }, [persistPreferences]);
+
+  const disableNotificationPermission = useCallback(async () => {
+    setSaving(true);
+    setError(null);
+
+    try {
+      await persistPreferences({
+        push_permission_status: "denied",
+      });
+
+      return "denied" as const;
     } finally {
       setSaving(false);
     }
@@ -246,5 +238,7 @@ export function useFuelStationReminder() {
     setEnabled,
     requestLocationPermission,
     requestNotificationPermission,
+    disableLocationPermission,
+    disableNotificationPermission,
   };
 }
