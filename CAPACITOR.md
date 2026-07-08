@@ -45,9 +45,20 @@ Observacao importante:
 
 ## Configuracao Atual
 
+O projeto suporta 2 modos de app mobile:
+
+- `remote`: a WebView abre a URL publicada definida em `CAPACITOR_SERVER_URL`
+- `local`: a WebView abre o bundle embutido em `dist/capacitor`
+
+Importante:
+
+- `remote` nao significa desktop; significa app mobile carregando a versao publicada
+- `local` nao depende da URL publicada, mas hoje precisa de um bundle real gerado para `dist/capacitor`
+
 O app mobile usa a variavel abaixo para carregar a versao publicada do sistema:
 
 - `CAPACITOR_SERVER_URL`
+- `CAPACITOR_LIVE_RELOAD=true`
 
 Forma recomendada:
 
@@ -67,7 +78,7 @@ CAPACITOR_SERVER_URL="https://seu-dominio.com"
 Depois:
 
 ```bash
-npm run cap:sync:android
+npm run cap:sync:android:remote
 ```
 
 Fallbacks aceitos na configuracao:
@@ -81,7 +92,14 @@ Se a variavel nao estiver definida, o app usa um `fallback` minimo apenas para m
 ## Scripts Disponiveis
 
 - `npm run cap:sync`
+- `npm run cap:sync:remote`
+- `npm run cap:sync:local`
 - `npm run cap:sync:android`
+- `npm run cap:sync:android:remote`
+- `npm run cap:sync:android:local`
+- `npm run cap:sync:ios`
+- `npm run cap:sync:ios:remote`
+- `npm run cap:sync:ios:local`
 - `npm run cap:open:android`
 - `npm run cap:run:android`
 

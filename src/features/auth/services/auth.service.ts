@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { clearNativeSession, loadNativeSession, saveNativeSession } from "@/lib/supabase/native-storage";
 import { Capacitor } from "@capacitor/core";
+import type { Session } from "@supabase/supabase-js";
 
-async function getStableSession() {
+async function getStableSession(): Promise<Session | null> {
   const supabase = createClient();
 
   const {
@@ -35,7 +36,7 @@ async function getStableSession() {
     }
   }
 
-  return await new Promise<Awaited<ReturnType<typeof authService.getSession>>>((resolve) => {
+  return await new Promise<Session | null>((resolve) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, nextSession) => {
@@ -129,11 +130,11 @@ export const authService = {
     return data;
   },
 
-  async getSession() {
+  async getSession(): Promise<Session | null> {
     return await getStableSession();
   },
 
-  async syncSession() {
+  async syncSession(): Promise<Session | null> {
     const session = await getStableSession();
 
     if (!session) {
