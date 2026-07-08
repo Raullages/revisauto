@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Abastecimentos", href: "/fuel" },
+  { label: "Postos Próximos", href: "/fuel/nearby" },
   { label: "Calculadora", href: "/fuel/calculator" },
   { label: "Relatórios", href: "/fuel/reports" },
 ];
@@ -20,7 +21,7 @@ export default function FuelLayout({ children }: { children: React.ReactNode }) 
           {tabs.map((tab) => {
             const isActive =
               tab.href === "/fuel"
-                ? pathname === "/fuel" || pathname.startsWith("/fuel/") && !pathname.startsWith("/fuel/calculator") && !pathname.startsWith("/fuel/reports")
+                ? pathname === "/fuel" || pathname.startsWith("/fuel/") && !pathname.startsWith("/fuel/calculator") && !pathname.startsWith("/fuel/reports") && !pathname.startsWith("/fuel/nearby")
                 : pathname.startsWith(tab.href);
             return (
               <Link
