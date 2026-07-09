@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "import:fuel-stations": "node scripts/import-fuel-stations.js",
     "cap:sync": "npx cap sync",
     "cap:sync:remote": "CAPACITOR_LIVE_RELOAD=true npx cap sync",
     "cap:sync:local": "CAPACITOR_LIVE_RELOAD=false npx cap sync",
@@ -45,6 +46,8 @@
     "react-hot-toast": "^2.6.0",
     "serwist": "^9.5.11",
     "tailwind-merge": "^3.6.0",
+    "ws": "^8.18.3",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

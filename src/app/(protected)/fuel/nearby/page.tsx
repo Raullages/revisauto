@@ -25,6 +25,21 @@ type NearbyResponse = {
   radiusMeters: number;
 };
 
+type UserLocation = {
+  latitude: number;
+  longitude: number;
+};
+
+function getMapsUrl(latitude: number, longitude: number, origin: UserLocation | null) {
+  const destination = `${latitude},${longitude}`;
+
+  if (!origin) {
+    return `https://www.google.com/maps/search/?api=1&query=${destination}`;
+  }
+
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${destination}`;
+}
+
 type ViewState =
   | { type: "loading" }
   | { type: "location-denied" }
@@ -34,6 +49,7 @@ type ViewState =
 
 export default function NearbyFuelStationsPage() {
   const [view, setView] = useState<ViewState>({ type: "loading" });
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -45,6 +61,11 @@ export default function NearbyFuelStationsPage() {
         if (!active) {
           return;
         }
+
+        setUserLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
 
         const response = await fetch(
           `/api/fuel-stations/nearby?lat=${position.coords.latitude}&lng=${position.coords.longitude}&radiusMeters=5000&limit=10`,
@@ -150,6 +171,14 @@ export default function NearbyFuelStationsPage() {
                     .filter(Boolean)
                     .join(", ")}
                 </p>
+                <a
+                  href={getMapsUrl(station.latitude, station.longitude, userLocation)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                >
+                  Ir
+                </a>
               </div>
               <span className="shrink-0 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                 {station.distanceMeters < 1000

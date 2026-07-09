@@ -11,7 +11,7 @@ function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function DashboardPage() {
+export default function DashboardPageClient() {
   const router = useRouter();
   const { data, isLoading } = useDashboard();
   const { data: fuelStats } = useFuelStats();

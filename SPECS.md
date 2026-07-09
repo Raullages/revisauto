@@ -542,7 +542,6 @@ Lembrete mobile-first para sugerir o registro de abastecimento quando o usuário
   - carga inicial aplicada no projeto Supabase: `1262` postos
 - Backend
   - `GET /api/fuel-stations/nearby` — busca postos próximos a partir do cache local
-  - `POST /api/fuel-stations/sync` — sincronização de páginas da ANP para o cache
   - `POST /api/fuel-stations/should-notify` — decisão centralizada com regras mínimas
 - Cliente
   - `useFuelStationReminder` para preferências e permissões
@@ -567,7 +566,6 @@ Lembrete mobile-first para sugerir o registro de abastecimento quando o usuário
 - `src/hooks/useFuelStationReminder.ts`
 - `src/components/providers/FuelStationReminderProvider.tsx`
 - `src/app/api/fuel-stations/nearby/route.ts`
-- `src/app/api/fuel-stations/sync/route.ts`
 - `src/app/api/fuel-stations/should-notify/route.ts`
 - `src/lib/anp/fuel-stations.ts`
 - `src/lib/fuel-stations.ts`

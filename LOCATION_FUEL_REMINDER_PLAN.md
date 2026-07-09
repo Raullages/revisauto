@@ -196,7 +196,6 @@ No MVP, nao precisa preencher automaticamente o posto. Basta abrir `/fuel/new` c
   - carga inicial no projeto: `1262` registros validos
 - Endpoints implementados
   - `GET /api/fuel-stations/nearby`
-  - `POST /api/fuel-stations/sync`
   - `POST /api/fuel-stations/should-notify`
 
 ### Regras minimas atualmente ligadas
