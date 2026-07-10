@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
 import { getDistanceInMeters } from "@/lib/geo";
-import type { Position } from "@capacitor/geolocation";
 import {
   addReminderNotificationListener,
   clearDeviceWatch,
@@ -20,6 +19,7 @@ const MOVING_SPEED_MPS = 1.5;
 type StopCandidate = {
   latitude: number;
   longitude: number;
+  accuracy: number;
   startedAt: number;
   evaluated: boolean;
 };
@@ -40,6 +40,7 @@ export function FuelStationReminderProvider() {
   const watchIdRef = useRef<string | null>(null);
   const checkingRef = useRef(false);
   const stopCandidateRef = useRef<StopCandidate | null>(null);
+  const stopTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     let listenerHandle: { remove: () => Promise<void> } | null = null;
@@ -54,6 +55,81 @@ export function FuelStationReminderProvider() {
   }, []);
 
   useEffect(() => {
+    const clearStopTimeout = () => {
+      if (stopTimeoutRef.current !== null) {
+        window.clearTimeout(stopTimeoutRef.current);
+        stopTimeoutRef.current = null;
+      }
+    };
+
+    const setStopCandidate = (candidate: StopCandidate | null) => {
+      stopCandidateRef.current = candidate;
+
+      clearStopTimeout();
+
+      if (!candidate || candidate.evaluated) {
+        return;
+      }
+
+      const remainingMs = Math.max(0, MIN_STOPPED_SECONDS * 1000 - (Date.now() - candidate.startedAt));
+
+      stopTimeoutRef.current = window.setTimeout(() => {
+        const currentCandidate = stopCandidateRef.current;
+
+        if (!currentCandidate || currentCandidate.evaluated || currentCandidate.startedAt !== candidate.startedAt) {
+          return;
+        }
+
+        void evaluateStop(currentCandidate);
+      }, remainingMs);
+    };
+
+    const evaluateStop = async (candidate: StopCandidate) => {
+      if (checkingRef.current) {
+        return;
+      }
+
+      const currentCandidate = stopCandidateRef.current;
+      if (!currentCandidate || currentCandidate.evaluated || currentCandidate.startedAt !== candidate.startedAt) {
+        return;
+      }
+
+      const stoppedForSeconds = Math.floor((Date.now() - candidate.startedAt) / 1000);
+      if (stoppedForSeconds < MIN_STOPPED_SECONDS) {
+        setStopCandidate(candidate);
+        return;
+      }
+
+      checkingRef.current = true;
+      setStopCandidate({ ...candidate, evaluated: true });
+
+      try {
+        const response = await fetch("/api/fuel-stations/should-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lat: candidate.latitude,
+            lng: candidate.longitude,
+            accuracy: candidate.accuracy,
+            stoppedForSeconds,
+          }),
+        });
+
+        const payload = (await response.json()) as ShouldNotifyResponse & { error?: string };
+
+        if (!response.ok || !payload.shouldNotify || !payload.notification) {
+          return;
+        }
+
+        await showReminderNotification(payload.notification);
+        reminder.refresh();
+      } catch {
+        setStopCandidate({ ...candidate, evaluated: true });
+      } finally {
+        checkingRef.current = false;
+      }
+    };
+
     if (
       reminder.loading ||
       !reminder.isSupported ||
@@ -65,55 +141,10 @@ export function FuelStationReminderProvider() {
         void clearDeviceWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      stopCandidateRef.current = null;
+      setStopCandidate(null);
       checkingRef.current = false;
       return;
     }
-
-    const evaluateStop = async (position: GeolocationPosition | Position) => {
-      if (checkingRef.current) {
-        return;
-      }
-
-      const candidate = stopCandidateRef.current;
-      if (!candidate || candidate.evaluated) {
-        return;
-      }
-
-      const stoppedForSeconds = Math.floor((Date.now() - candidate.startedAt) / 1000);
-      if (stoppedForSeconds < MIN_STOPPED_SECONDS) {
-        return;
-      }
-
-      checkingRef.current = true;
-
-      try {
-        const response = await fetch("/api/fuel-stations/should-notify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            stoppedForSeconds,
-          }),
-        });
-
-        const payload = (await response.json()) as ShouldNotifyResponse & { error?: string };
-        stopCandidateRef.current = { ...candidate, evaluated: true };
-
-        if (!response.ok || !payload.shouldNotify || !payload.notification) {
-          return;
-        }
-
-        await showReminderNotification(payload.notification);
-        reminder.refresh();
-      } catch {
-        stopCandidateRef.current = { ...candidate, evaluated: true };
-      } finally {
-        checkingRef.current = false;
-      }
-    };
 
     void (async () => {
       watchIdRef.current = await watchDevicePosition(
@@ -128,18 +159,19 @@ export function FuelStationReminderProvider() {
           }
 
           if (typeof position.coords.speed === "number" && position.coords.speed > MOVING_SPEED_MPS) {
-            stopCandidateRef.current = null;
+            setStopCandidate(null);
             return;
           }
 
           const candidate = stopCandidateRef.current;
           if (!candidate) {
-            stopCandidateRef.current = {
+            setStopCandidate({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
               startedAt: Date.now(),
               evaluated: false,
-            };
+            });
             return;
           }
 
@@ -151,29 +183,37 @@ export function FuelStationReminderProvider() {
           );
 
           if (distanceFromAnchor > RESET_STOP_RADIUS_METERS) {
-            stopCandidateRef.current = {
+            setStopCandidate({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
               startedAt: Date.now(),
               evaluated: false,
-            };
+            });
             return;
           }
 
           if (distanceFromAnchor <= MIN_STOP_RADIUS_METERS) {
-            void evaluateStop(position);
+            const nextCandidate = {
+              ...candidate,
+              accuracy: position.coords.accuracy,
+            };
+
+            setStopCandidate(nextCandidate);
+            void evaluateStop(nextCandidate);
             return;
           }
 
-          stopCandidateRef.current = {
+          setStopCandidate({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
             startedAt: Date.now(),
             evaluated: false,
-          };
+          });
         },
         () => {
-          stopCandidateRef.current = null;
+          setStopCandidate(null);
         },
       );
     })();
@@ -183,7 +223,7 @@ export function FuelStationReminderProvider() {
         void clearDeviceWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      stopCandidateRef.current = null;
+      setStopCandidate(null);
       checkingRef.current = false;
     };
   }, [
