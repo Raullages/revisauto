@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
 import { Button } from "@/components/ui/Button";
+import { showReminderNotification } from "@/lib/mobile/reminder";
 import toast from "react-hot-toast";
 
 function getPermissionStatusMeta(status: string) {
@@ -53,6 +54,7 @@ function getSystemPermissionInstructions(permission: "location" | "notifications
 export default function ProfilePage() {
   const [user, setUser] = useState<{ email?: string; fullName?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sendingTestNotification, setSendingTestNotification] = useState(false);
   const push = usePushNotifications();
   const reminder = useFuelStationReminder();
 
@@ -138,6 +140,25 @@ export default function ProfilePage() {
       toast.success("Notificações desativadas para o lembrete inteligente.");
     } catch {
       toast.error("Erro ao solicitar a permissão de notificação.");
+    }
+  };
+
+  const handleTestNotification = async () => {
+    setSendingTestNotification(true);
+
+    try {
+      await showReminderNotification({
+        title: "Teste de notificação",
+        body: "Se você recebeu isso, o disparo local do app está funcionando.",
+        url: "/profile",
+        tag: "fuel-reminder-test",
+      });
+
+      toast.success("Notificação de teste enviada.");
+    } catch {
+      toast.error("Erro ao enviar notificação de teste.");
+    } finally {
+      setSendingTestNotification(false);
     }
   };
 
@@ -294,6 +315,14 @@ export default function ProfilePage() {
             {reminder.preferences.push_permission_status === "default"
               ? "Permitir notificações"
               : "Ver ajustes de notificações"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleTestNotification}
+            disabled={reminder.loading || reminder.saving || reminder.preferences.push_permission_status !== "granted"}
+            loading={sendingTestNotification}
+          >
+            Testar notificação
           </Button>
         </div>
       </div>
