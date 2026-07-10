@@ -124,6 +124,18 @@ export async function POST(request: Request) {
     const station = stations[0];
     const reminderUrl = "/fuel/new?source=location-reminder";
 
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: user.id,
+        title: "Você parou em um posto?",
+        body: "Se abasteceu agora, não esqueça de registrar no app.",
+      });
+
+    if (notificationError) {
+      throw notificationError;
+    }
+
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
@@ -135,18 +147,6 @@ export async function POST(request: Request) {
 
     if (updateError) {
       throw updateError;
-    }
-
-    const { error: notificationError } = await supabase
-      .from("notifications")
-      .insert({
-        user_id: user.id,
-        title: "Você parou em um posto?",
-        body: "Se abasteceu agora, não esqueça de registrar no app.",
-      });
-
-    if (notificationError) {
-      throw notificationError;
     }
 
     return NextResponse.json({
