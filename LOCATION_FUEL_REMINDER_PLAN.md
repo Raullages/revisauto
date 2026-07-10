@@ -215,6 +215,58 @@ No MVP, nao precisa preencher automaticamente o posto. Basta abrir `/fuel/new` c
 - criar tabela/eventos dedicados de lembrete se precisarmos medir melhor conversao e falso positivo
 - opcionalmente relacionar lembrete e abastecimento salvo
 
+## Registro de depuracao em campo
+
+### Resultado final
+
+- O lembrete por proximidade foi validado com sucesso em dispositivo real.
+- O problema principal nao era a deteccao de posto, e sim o fluxo final de persistencia em `public.notifications`.
+
+### Problemas encontrados
+
+1. A notificacao local so podia ser testada com confianca no app mobile. O navegador nao foi um bom ambiente para validar esse fluxo.
+2. O fluxo dependia demais de uma nova atualizacao de GPS apos os `90s` de parada.
+3. A tabela `public.notifications` tinha `select` e `update`, mas nao tinha policy de `insert` para o proprio usuario autenticado.
+4. O cooldown era salvo no perfil antes do `insert` em `notifications`, entao uma falha nesse `insert` podia bloquear testes futuros com `same_place_cooldown` mesmo sem notificacao entregue.
+
+### Correcoes aplicadas
+
+- `src/components/providers/FuelStationReminderProvider.tsx`
+  - passou a usar um `timeout` para avaliar a parada apos `90s` mesmo sem nova posicao exata nesse instante
+  - passou a registrar diagnostico local do fluxo
+- `src/lib/mobile/reminder-debug.ts`
+  - novo helper para salvar e carregar o ultimo diagnostico do lembrete via `localStorage`
+- `src/app/(protected)/profile/page.tsx`
+  - adicionados os controles `Testar notificacao` e `Atualizar diagnostico`
+  - adicionado bloco com o ultimo diagnostico do lembrete
+  - esses elementos ficaram visiveis apenas para o usuario definido em `NEXT_PUBLIC_OWNER_USER_ID`
+- `src/app/api/fuel-stations/should-notify/route.ts`
+  - alterada a ordem do fluxo para salvar o cooldown no `profiles` somente depois do `insert` em `notifications`
+- `supabase/migrations/20260709123000_notifications_insert_policy.sql`
+  - adicionada policy `Users can insert own notifications`
+  - concedido `grant insert on public.notifications to authenticated`
+
+### Itens temporarios mantidos de proposito
+
+- O botao `Testar notificacao` foi mantido para verificacao rapida do canal local de notificacao.
+- O botao `Atualizar diagnostico` e o bloco de diagnostico foram mantidos para futuras validacoes de campo.
+- Esses elementos sao internos e dependem da env publica abaixo.
+
+### Configuracao necessaria
+
+Adicionar no ambiente do app:
+
+```env
+NEXT_PUBLIC_OWNER_USER_ID=<uuid-do-usuario-dono>
+```
+
+Sem essa env, os controles internos de teste e diagnostico nao aparecem.
+
+### Observacao operacional
+
+- Durante a depuracao foi criado um posto ficticio temporario em `fuel_stations` para validar proximidade em coordenada real.
+- Esse posto ja foi removido do banco apos a validacao.
+
 ## Fase 1: MVP funcional
 
 - [x] Adicionar preferencia do recurso no perfil.
