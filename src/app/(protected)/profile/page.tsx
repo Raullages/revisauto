@@ -11,6 +11,8 @@ import { loadReminderDebugState, type ReminderDebugState } from "@/lib/mobile/re
 import { showReminderNotification } from "@/lib/mobile/reminder";
 import toast from "react-hot-toast";
 
+const OWNER_USER_ID = process.env.NEXT_PUBLIC_OWNER_USER_ID;
+
 function getPermissionStatusMeta(status: string) {
   if (status === "granted") {
     return {
@@ -53,7 +55,7 @@ function getSystemPermissionInstructions(permission: "location" | "notifications
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<{ email?: string; fullName?: string } | null>(null);
+  const [user, setUser] = useState<{ id?: string; email?: string; fullName?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sendingTestNotification, setSendingTestNotification] = useState(false);
   const [reminderDebug, setReminderDebug] = useState<ReminderDebugState | null>(null);
@@ -72,6 +74,7 @@ export default function ProfilePage() {
           .single()
           .then(({ data: profile }) => {
             setUser({
+              id: authUser.id,
               email: authUser.email,
               fullName: profile?.full_name || authUser.user_metadata?.full_name || "",
             });
@@ -175,6 +178,7 @@ export default function ProfilePage() {
   const reminderEnabled = reminder.preferences.fuel_station_reminders_enabled;
   const locationStatus = getPermissionStatusMeta(reminder.preferences.location_permission_status);
   const notificationStatus = getPermissionStatusMeta(reminder.preferences.push_permission_status);
+  const isOwner = user?.id === OWNER_USER_ID;
 
   return (
     <div className="mx-auto max-w-lg">
@@ -305,7 +309,7 @@ export default function ProfilePage() {
               Este dispositivo ou navegador não expõe geolocalização para o recurso.
             </p>
           )}
-          {reminderDebug && (
+          {isOwner && reminderDebug && (
             <div className="rounded-lg border border-dashed border-gray-300 px-3 py-3 text-xs dark:border-gray-600">
               <p>
                 Último diagnóstico: <span className="font-medium">{new Date(reminderDebug.checkedAt).toLocaleString("pt-BR")}</span>
@@ -359,20 +363,24 @@ export default function ProfilePage() {
               ? "Permitir notificações"
               : "Ver ajustes de notificações"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleTestNotification}
-            disabled={reminder.loading || reminder.saving || reminder.preferences.push_permission_status !== "granted"}
-            loading={sendingTestNotification}
-          >
-            Testar notificação
-          </Button>
-          <Button
-            variant="outline"
-            onClick={refreshReminderDebug}
-          >
-            Atualizar diagnóstico
-          </Button>
+          {isOwner && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleTestNotification}
+                disabled={reminder.loading || reminder.saving || reminder.preferences.push_permission_status !== "granted"}
+                loading={sendingTestNotification}
+              >
+                Testar notificação
+              </Button>
+              <Button
+                variant="outline"
+                onClick={refreshReminderDebug}
+              >
+                Atualizar diagnóstico
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
