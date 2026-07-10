@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
 import { Button } from "@/components/ui/Button";
+import { loadReminderDebugState, type ReminderDebugState } from "@/lib/mobile/reminder-debug";
 import { showReminderNotification } from "@/lib/mobile/reminder";
 import toast from "react-hot-toast";
 
@@ -55,6 +56,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<{ email?: string; fullName?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sendingTestNotification, setSendingTestNotification] = useState(false);
+  const [reminderDebug, setReminderDebug] = useState<ReminderDebugState | null>(null);
   const push = usePushNotifications();
   const reminder = useFuelStationReminder();
 
@@ -79,6 +81,10 @@ export default function ProfilePage() {
         setLoading(false);
       }
     });
+  }, []);
+
+  useEffect(() => {
+    setReminderDebug(loadReminderDebugState());
   }, []);
 
   const handleReminderToggle = async () => {
@@ -160,6 +166,10 @@ export default function ProfilePage() {
     } finally {
       setSendingTestNotification(false);
     }
+  };
+
+  const refreshReminderDebug = () => {
+    setReminderDebug(loadReminderDebugState());
   };
 
   const reminderEnabled = reminder.preferences.fuel_station_reminders_enabled;
@@ -295,6 +305,39 @@ export default function ProfilePage() {
               Este dispositivo ou navegador não expõe geolocalização para o recurso.
             </p>
           )}
+          {reminderDebug && (
+            <div className="rounded-lg border border-dashed border-gray-300 px-3 py-3 text-xs dark:border-gray-600">
+              <p>
+                Último diagnóstico: <span className="font-medium">{new Date(reminderDebug.checkedAt).toLocaleString("pt-BR")}</span>
+              </p>
+              <p>
+                Status: <span className="font-medium">{reminderDebug.status}</span>
+              </p>
+              <p>
+                Motivo: <span className="font-medium">{reminderDebug.reason}</span>
+              </p>
+              {typeof reminderDebug.stoppedForSeconds === "number" && (
+                <p>
+                  Tempo parado: <span className="font-medium">{reminderDebug.stoppedForSeconds}s</span>
+                </p>
+              )}
+              {typeof reminderDebug.accuracy === "number" && (
+                <p>
+                  Precisão: <span className="font-medium">{Math.round(reminderDebug.accuracy)}m</span>
+                </p>
+              )}
+              {typeof reminderDebug.latitude === "number" && typeof reminderDebug.longitude === "number" && (
+                <p>
+                  Coordenada: <span className="font-medium">{reminderDebug.latitude.toFixed(6)}, {reminderDebug.longitude.toFixed(6)}</span>
+                </p>
+              )}
+              {reminderDebug.details && (
+                <p>
+                  Detalhe: <span className="font-medium">{reminderDebug.details}</span>
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
@@ -323,6 +366,12 @@ export default function ProfilePage() {
             loading={sendingTestNotification}
           >
             Testar notificação
+          </Button>
+          <Button
+            variant="outline"
+            onClick={refreshReminderDebug}
+          >
+            Atualizar diagnóstico
           </Button>
         </div>
       </div>

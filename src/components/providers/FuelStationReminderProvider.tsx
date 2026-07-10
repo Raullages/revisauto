@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
 import { getDistanceInMeters } from "@/lib/geo";
+import { saveReminderDebugState } from "@/lib/mobile/reminder-debug";
 import {
   addReminderNotificationListener,
   clearDeviceWatch,
@@ -96,6 +97,15 @@ export function FuelStationReminderProvider() {
 
       const stoppedForSeconds = Math.floor((Date.now() - candidate.startedAt) / 1000);
       if (stoppedForSeconds < MIN_STOPPED_SECONDS) {
+        saveReminderDebugState({
+          checkedAt: new Date().toISOString(),
+          status: "watching",
+          reason: "waiting_min_stopped_time",
+          latitude: candidate.latitude,
+          longitude: candidate.longitude,
+          accuracy: candidate.accuracy,
+          stoppedForSeconds,
+        });
         setStopCandidate(candidate);
         return;
       }
@@ -118,12 +128,40 @@ export function FuelStationReminderProvider() {
         const payload = (await response.json()) as ShouldNotifyResponse & { error?: string };
 
         if (!response.ok || !payload.shouldNotify || !payload.notification) {
+          saveReminderDebugState({
+            checkedAt: new Date().toISOString(),
+            status: response.ok ? "skipped" : "error",
+            reason: payload.reason ?? (response.ok ? "notification_not_sent" : "request_failed"),
+            latitude: candidate.latitude,
+            longitude: candidate.longitude,
+            accuracy: candidate.accuracy,
+            stoppedForSeconds,
+            details: payload.error,
+          });
           return;
         }
 
         await showReminderNotification(payload.notification);
+        saveReminderDebugState({
+          checkedAt: new Date().toISOString(),
+          status: "notified",
+          reason: payload.reason ?? "station_nearby",
+          latitude: candidate.latitude,
+          longitude: candidate.longitude,
+          accuracy: candidate.accuracy,
+          stoppedForSeconds,
+        });
         reminder.refresh();
       } catch {
+        saveReminderDebugState({
+          checkedAt: new Date().toISOString(),
+          status: "error",
+          reason: "request_exception",
+          latitude: candidate.latitude,
+          longitude: candidate.longitude,
+          accuracy: candidate.accuracy,
+          stoppedForSeconds,
+        });
         setStopCandidate({ ...candidate, evaluated: true });
       } finally {
         checkingRef.current = false;
@@ -141,6 +179,19 @@ export function FuelStationReminderProvider() {
         void clearDeviceWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
+      saveReminderDebugState({
+        checkedAt: new Date().toISOString(),
+        status: "skipped",
+        reason: reminder.loading
+          ? "reminder_loading"
+          : !reminder.isSupported
+            ? "reminder_unsupported"
+            : !reminder.preferences.fuel_station_reminders_enabled
+              ? "feature_disabled"
+              : reminder.preferences.location_permission_status !== "granted"
+                ? "location_permission_not_granted"
+                : "push_permission_not_granted",
+      });
       setStopCandidate(null);
       checkingRef.current = false;
       return;
@@ -155,16 +206,41 @@ export function FuelStationReminderProvider() {
         },
         (position) => {
           if (position.coords.accuracy > MAX_ACCURACY_METERS) {
+            saveReminderDebugState({
+              checkedAt: new Date().toISOString(),
+              status: "skipped",
+              reason: "accuracy_too_low_before_check",
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            });
             return;
           }
 
           if (typeof position.coords.speed === "number" && position.coords.speed > MOVING_SPEED_MPS) {
+            saveReminderDebugState({
+              checkedAt: new Date().toISOString(),
+              status: "watching",
+              reason: "moving",
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            });
             setStopCandidate(null);
             return;
           }
 
           const candidate = stopCandidateRef.current;
           if (!candidate) {
+            saveReminderDebugState({
+              checkedAt: new Date().toISOString(),
+              status: "watching",
+              reason: "stop_candidate_started",
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              stoppedForSeconds: 0,
+            });
             setStopCandidate({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
@@ -183,6 +259,14 @@ export function FuelStationReminderProvider() {
           );
 
           if (distanceFromAnchor > RESET_STOP_RADIUS_METERS) {
+            saveReminderDebugState({
+              checkedAt: new Date().toISOString(),
+              status: "watching",
+              reason: "stop_candidate_reset",
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            });
             setStopCandidate({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
@@ -213,6 +297,11 @@ export function FuelStationReminderProvider() {
           });
         },
         () => {
+          saveReminderDebugState({
+            checkedAt: new Date().toISOString(),
+            status: "error",
+            reason: "watch_position_error",
+          });
           setStopCandidate(null);
         },
       );
