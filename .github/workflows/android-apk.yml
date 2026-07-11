@@ -34,10 +34,10 @@ jobs:
 
       - name: Configure Capacitor server URL
         run: |
-          printf 'CAPACITOR_SERVER_URL=%s\n' "${{ github.event.inputs.capacitor_server_url || 'https://pessoauto.vercel.app' }}" > .env.capacitor
+          printf 'CAPACITOR_SERVER_URL=%s\nCAPACITOR_LIVE_RELOAD=true\n' "${{ github.event.inputs.capacitor_server_url || 'https://pessoauto.vercel.app' }}" > .env.capacitor
 
       - name: Sync Capacitor Android project
-        run: npm run cap:sync:android
+        run: npm run cap:sync:android:remote
 
       - name: Build debug APK
         working-directory: android

@@ -3,6 +3,21 @@ import { clearNativeSession, loadNativeSession, saveNativeSession } from "@/lib/
 import { Capacitor } from "@capacitor/core";
 import type { Session } from "@supabase/supabase-js";
 
+function getAuthCallbackUrl(next?: string) {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    window.location.origin;
+
+  const callbackUrl = new URL("/auth/callback", baseUrl);
+
+  if (next) {
+    callbackUrl.searchParams.set("next", next);
+  }
+
+  return callbackUrl.toString();
+}
+
 async function getStableSession(): Promise<Session | null> {
   const supabase = createClient();
 
@@ -77,7 +92,7 @@ export const authService = {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: getAuthCallbackUrl(),
       },
     });
     if (error) throw error;
@@ -118,7 +133,7 @@ export const authService = {
   async resetPassword(email: string) {
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+      redirectTo: getAuthCallbackUrl("/auth/reset-password"),
     });
     if (error) throw error;
   },
