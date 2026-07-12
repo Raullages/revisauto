@@ -152,7 +152,7 @@ export default function DashboardPageClient() {
         <div className="-mx-4 overflow-x-auto px-4 lg:hidden">
           <div className="flex gap-3 pb-1">
             {secondaryStats.map((card) => (
-              <Card key={card.label} className="min-w-[170px] shrink-0">
+              <Card key={card.label} className="min-w-[170px] shrink-0 border-blue-200/80 dark:border-blue-900/60">
                 <CardBody className="p-4">
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{card.label}</p>
                   <p className="mt-2 text-xl font-bold text-gray-900 dark:text-white">{card.value}</p>
@@ -201,7 +201,7 @@ export default function DashboardPageClient() {
         <div className="hidden gap-4 lg:grid">
           <div className="grid gap-4 sm:grid-cols-2">
             {secondaryStats.map((card) => (
-              <Card key={card.label}>
+              <Card key={card.label} className="border-blue-200/80 dark:border-blue-900/60">
                 <CardBody className="p-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400">{card.label}</p>
                   <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
@@ -346,15 +346,15 @@ export default function DashboardPageClient() {
                   <div
                     key={m.id}
                     onClick={() => router.push(`/maintenances/${m.id}`)}
-                    className="flex cursor-pointer items-center justify-between rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    className="flex cursor-pointer flex-col items-start gap-2 rounded-lg p-2 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-gray-700/50"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{m.title}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white sm:truncate">{m.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {m.vehicles?.brand} {m.vehicles?.model}
                       </p>
                     </div>
-                    <div className="ml-2 shrink-0 text-right">
+                    <div className="self-end text-right sm:ml-2 sm:shrink-0 sm:self-auto">
                       {m.next_change_date && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(m.next_change_date + "T12:00:00").toLocaleDateString("pt-BR")}
@@ -389,15 +389,15 @@ export default function DashboardPageClient() {
                   <div
                     key={m.id}
                     onClick={() => router.push(`/maintenances/${m.id}`)}
-                    className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    className="flex cursor-pointer flex-col items-start gap-2 rounded-lg px-2 py-2.5 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-gray-700/50"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{m.title}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white sm:truncate">{m.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {m.vehicles?.brand} {m.vehicles?.model} — {new Date(m.maintenance_date + "T12:00:00").toLocaleDateString("pt-BR")}
                       </p>
                     </div>
-                    <div className="ml-3 flex shrink-0 items-center gap-2 text-gray-400">
+                    <div className="flex self-end items-center gap-2 text-gray-400 sm:ml-3 sm:shrink-0 sm:self-auto">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(m.amount)}</p>
                       <ArrowRight className="h-4 w-4" />
                     </div>
