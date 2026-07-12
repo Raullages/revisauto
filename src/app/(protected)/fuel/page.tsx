@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFuelLogs } from "@/features/fuel/viewmodel/useFuel";
 import { useVehicles } from "@/features/vehicles/viewmodel/useVehicles";
@@ -151,8 +152,8 @@ export default function FuelPage() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mb-4 space-y-3">
+        <div className="flex w-full items-center gap-2">
           <button
             type="button"
             onClick={() => setPeriodFilter("all")}
@@ -165,46 +166,66 @@ export default function FuelPage() {
             Todos
           </button>
 
-          <div className="flex items-center gap-2 self-start rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="px-2"
-            disabled={periodFilter === "all"}
-            onClick={() => setSelectedMonth((current) => addMonths(current, -1))}
-          >
-            <span aria-hidden="true">&lt;</span>
-          </Button>
-          <button
-            type="button"
-            onClick={() => setPeriodFilter("month")}
-            className={`min-w-28 rounded-md px-2 py-1 text-center text-sm font-medium transition-colors ${
-              periodFilter === "month"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
-                : "text-gray-900 dark:text-white"
-            }`}
-          >
-            {formatMonthYear(selectedMonth)}
-          </button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="px-2"
-            disabled={periodFilter === "all" || isCurrentMonth}
-            onClick={() => setSelectedMonth((current) => addMonths(current, 1))}
-          >
-            <span aria-hidden="true">&gt;</span>
-          </Button>
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-2"
+              disabled={periodFilter === "all"}
+              onClick={() => setSelectedMonth((current) => addMonths(current, -1))}
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <button
+              type="button"
+              onClick={() => setPeriodFilter("month")}
+              className={`flex-1 rounded-md px-2 py-1 text-center text-sm font-medium transition-colors ${
+                periodFilter === "month"
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
+                  : "text-gray-900 dark:text-white"
+              }`}
+            >
+              {formatMonthYear(selectedMonth)}
+            </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-2"
+              disabled={periodFilter === "all" || isCurrentMonth}
+              onClick={() => setSelectedMonth((current) => addMonths(current, 1))}
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {filtered.length} abastecimento{filtered.length !== 1 ? "s" : ""}
-          </p>
-          <Button onClick={() => router.push("/fuel/new")}>
-            Novo abastecimento
-          </Button>
+        <div className="space-y-3 sm:flex sm:items-center sm:justify-between sm:space-y-0">
+          <div className="sm:flex sm:items-center sm:gap-3">
+            {vehicles.length > 0 && (
+              <select
+                value={vehicleFilter}
+                onChange={(e) => setVehicleFilter(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white md:text-sm sm:w-auto"
+              >
+                <option value="">Todos os veículos</option>
+                {vehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.brand} {v.model}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {filtered.length} abastecimento{filtered.length !== 1 ? "s" : ""}
+            </p>
+
+            <Button onClick={() => router.push("/fuel/new")}>
+              Novo abastecimento
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -241,23 +262,6 @@ export default function FuelPage() {
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Última km/l</p>
           </CardBody>
         </Card>
-      </div>
-
-      <div className="mb-4">
-        {vehicles.length > 0 && (
-          <select
-            value={vehicleFilter}
-            onChange={(e) => setVehicleFilter(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base md:text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white sm:w-auto"
-          >
-            <option value="">Todos os veículos</option>
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.brand} {v.model}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
 
       {filtered.length === 0 ? (
