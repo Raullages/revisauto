@@ -34,6 +34,20 @@ body {
   overscroll-behavior-y: contain;
 }
 
+@media (max-width: 767px) {
+  html.native-platform .protected-shell,
+  body.native-platform .protected-shell {
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
+
+  html.native-platform .protected-main,
+  body.native-platform .protected-main {
+    overflow-y: visible;
+  }
+}
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
