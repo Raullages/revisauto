@@ -43,4 +43,28 @@ class AppViewController: CAPBridgeViewController {
             self?.refreshControl?.endRefreshing()
         }
     }
+
+    func beginPullToRefresh() {
+        refreshTimeoutWorkItem?.cancel()
+
+        let timeoutWorkItem = DispatchWorkItem { [weak self] in
+            self?.endPullToRefresh()
+        }
+
+        refreshTimeoutWorkItem = timeoutWorkItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: timeoutWorkItem)
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let refreshControl = self.refreshControl, let scrollView = self.webView?.scrollView else {
+                return
+            }
+
+            if !refreshControl.isRefreshing {
+                refreshControl.beginRefreshing()
+            }
+
+            let targetOffset = CGPoint(x: 0, y: -scrollView.adjustedContentInset.top - refreshControl.frame.height)
+            scrollView.setContentOffset(targetOffset, animated: true)
+        }
+    }
 }

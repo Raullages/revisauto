@@ -9,6 +9,14 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "PullToRefresh")
 public class PullToRefreshPlugin extends Plugin {
     @PluginMethod
+    public void beginRefresh(PluginCall call) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).beginPullToRefresh();
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
     public void endRefresh(PluginCall call) {
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).endPullToRefresh();

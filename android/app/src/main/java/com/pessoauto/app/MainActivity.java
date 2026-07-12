@@ -79,4 +79,14 @@ public class MainActivity extends BridgeActivity {
             }
         });
     }
+
+    public void beginPullToRefresh() {
+        refreshTimeoutHandler.removeCallbacks(refreshTimeoutRunnable);
+        refreshTimeoutHandler.postDelayed(refreshTimeoutRunnable, 10000);
+        runOnUiThread(() -> {
+            if (swipeRefreshLayout != null) {
+                swipeRefreshLayout.setRefreshing(true);
+            }
+        });
+    }
 }
