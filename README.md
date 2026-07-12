@@ -1,5 +1,13 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment
+
+For production and mobile auth callbacks, configure:
+
+```env
+NEXT_PUBLIC_APP_URL=https://pessoauto.vercel.app
+```
+
 ## Getting Started
 
 First, run the development server:

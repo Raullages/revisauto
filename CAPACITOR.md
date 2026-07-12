@@ -64,6 +64,7 @@ Forma recomendada:
 
 - criar um arquivo `.env.capacitor` a partir de `.env.capacitor.example`
 - definir nele a URL publicada do app
+- manter `NEXT_PUBLIC_APP_URL` apontando para a mesma URL publicada para callbacks de auth
 
 Exemplo:
 
@@ -73,6 +74,7 @@ cp .env.capacitor.example .env.capacitor
 
 ```bash
 CAPACITOR_SERVER_URL="https://seu-dominio.com"
+NEXT_PUBLIC_APP_URL="https://seu-dominio.com"
 ```
 
 Depois:
@@ -86,6 +88,11 @@ Fallbacks aceitos na configuracao:
 - `CAPACITOR_SERVER_URL`
 - `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_SITE_URL`
+
+Para auth mobile:
+
+- `NEXT_PUBLIC_APP_URL` e a opcao preferida para `emailRedirectTo` e `redirectTo`
+- sem ela, o app cai no fallback de `window.location.origin`
 
 Se a variavel nao estiver definida, o app usa um `fallback` minimo apenas para manter o projeto Android sincronizavel.
 

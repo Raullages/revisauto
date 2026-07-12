@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFuelLogs, useFuelStats } from "@/features/fuel/viewmodel/useFuel";
+import { useFuelLogs } from "@/features/fuel/viewmodel/useFuel";
 import { useVehicles } from "@/features/vehicles/viewmodel/useVehicles";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardSkeleton } from "@/components/ui/Skeleton";
+import type { FuelLogWithVehicle } from "@/features/fuel/model/types";
 
 const fuelTypeLabels: Record<string, string> = {
   gasolina: "Gasolina",
@@ -24,12 +25,79 @@ function getPricePerLiter(totalCost: number, liters: number, pricePerLiter: numb
   return pricePerLiter ?? (totalCost / liters);
 }
 
+function getMonthKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
+function getMonthKeyFromDateString(date: string) {
+  return date.slice(0, 7);
+}
+
+function formatMonthYear(date: Date) {
+  const month = date.toLocaleDateString("pt-BR", { month: "long" });
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)}/${date.getFullYear()}`;
+}
+
+function addMonths(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+function getFuelStats(logs: FuelLogWithVehicle[]) {
+  if (logs.length === 0) {
+    return {
+      total_spent: 0,
+      total_liters: 0,
+      avg_km_per_liter: null as number | null,
+      lastKmPerLiter: null as number | null,
+    };
+  }
+
+  const total_spent = logs.reduce((sum, log) => sum + Number(log.total_cost), 0);
+  const total_liters = logs.reduce((sum, log) => sum + Number(log.liters), 0);
+  const fullTanksAsc = logs
+    .filter((log) => log.is_full_tank)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  let avg_km_per_liter: number | null = null;
+  if (fullTanksAsc.length >= 2) {
+    const totalKm = fullTanksAsc
+      .slice(1)
+      .reduce((sum, log, index) => sum + (log.odometer_km - fullTanksAsc[index].odometer_km), 0);
+    const totalLitersFromSecond = fullTanksAsc.slice(1).reduce((sum, log) => sum + Number(log.liters), 0);
+
+    if (totalLitersFromSecond > 0) {
+      avg_km_per_liter = Math.round((totalKm / totalLitersFromSecond) * 100) / 100;
+    }
+  }
+
+  let lastKmPerLiter: number | null = null;
+  const fullTanksDesc = [...fullTanksAsc].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  if (fullTanksDesc.length >= 2) {
+    const diff = fullTanksDesc[0].odometer_km - fullTanksDesc[1].odometer_km;
+    if (diff > 0) {
+      lastKmPerLiter = Math.round((diff / fullTanksDesc[0].liters) * 100) / 100;
+    }
+  }
+
+  return {
+    total_spent: Math.round(total_spent * 100) / 100,
+    total_liters: Math.round(total_liters * 100) / 100,
+    avg_km_per_liter,
+    lastKmPerLiter,
+  };
+}
+
 export default function FuelPage() {
   const router = useRouter();
   const { data: fuelLogs, isLoading } = useFuelLogs();
   const { data: vehicles } = useVehicles();
-  const { data: stats } = useFuelStats();
   const [vehicleFilter, setVehicleFilter] = useState("");
+  const [periodFilter, setPeriodFilter] = useState<"all" | "month">("month");
+  const [selectedMonth, setSelectedMonth] = useState(
+    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  );
 
   if (isLoading) {
     return (
@@ -70,67 +138,110 @@ export default function FuelPage() {
     );
   }
 
-  const filtered = (fuelLogs || []).filter(
+  const selectedMonthKey = getMonthKey(selectedMonth);
+  const currentMonthKey = getMonthKey(new Date());
+  const filteredByVehicle = (fuelLogs || []).filter(
     (f) => !vehicleFilter || f.vehicle_id === vehicleFilter,
   );
-
-  let lastKmPerLiter: number | null = null;
-  const fullTanks = (fuelLogs || []).filter((f) => f.is_full_tank);
-  if (fullTanks.length >= 2) {
-    const sorted = [...fullTanks].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const diff = sorted[0].odometer_km - sorted[1].odometer_km;
-    if (diff > 0) {
-      lastKmPerLiter = Math.round((diff / sorted[0].liters) * 100) / 100;
-    }
-  }
+  const filtered = filteredByVehicle.filter(
+    (f) => periodFilter === "all" || getMonthKeyFromDateString(f.date) === selectedMonthKey,
+  );
+  const stats = getFuelStats(filtered);
+  const isCurrentMonth = selectedMonthKey === currentMonthKey;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {filtered.length} abastecimento{filtered.length !== 1 ? "s" : ""}
-        </p>
-        <Button onClick={() => router.push("/fuel/new")}>
-          Novo abastecimento
-        </Button>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPeriodFilter("all")}
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              periodFilter === "all"
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            }`}
+          >
+            Todos
+          </button>
+
+          <div className="flex items-center gap-2 self-start rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="px-2"
+            disabled={periodFilter === "all"}
+            onClick={() => setSelectedMonth((current) => addMonths(current, -1))}
+          >
+            <span aria-hidden="true">&lt;</span>
+          </Button>
+          <button
+            type="button"
+            onClick={() => setPeriodFilter("month")}
+            className={`min-w-28 rounded-md px-2 py-1 text-center text-sm font-medium transition-colors ${
+              periodFilter === "month"
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
+                : "text-gray-900 dark:text-white"
+            }`}
+          >
+            {formatMonthYear(selectedMonth)}
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="px-2"
+            disabled={periodFilter === "all" || isCurrentMonth}
+            onClick={() => setSelectedMonth((current) => addMonths(current, 1))}
+          >
+            <span aria-hidden="true">&gt;</span>
+          </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {filtered.length} abastecimento{filtered.length !== 1 ? "s" : ""}
+          </p>
+          <Button onClick={() => router.push("/fuel/new")}>
+            Novo abastecimento
+          </Button>
+        </div>
       </div>
 
-      {stats && (
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(stats.total_spent)}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total gasto</p>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats.total_liters.toLocaleString()} L
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total litros</p>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats.avg_km_per_liter != null ? `${stats.avg_km_per_liter.toFixed(1)}` : "—"}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Média km/l</p>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {lastKmPerLiter != null ? `${lastKmPerLiter.toFixed(1)}` : "—"}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Última km/l</p>
-            </CardBody>
-          </Card>
-        </div>
-      )}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card>
+          <CardBody className="text-center">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {formatCurrency(stats.total_spent)}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total gasto</p>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody className="text-center">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {stats.total_liters.toLocaleString()} L
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total litros</p>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody className="text-center">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {stats.avg_km_per_liter != null ? `${stats.avg_km_per_liter.toFixed(1)}` : "—"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Média km/l</p>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody className="text-center">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {stats.lastKmPerLiter != null ? `${stats.lastKmPerLiter.toFixed(1)}` : "—"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Última km/l</p>
+          </CardBody>
+        </Card>
+      </div>
 
       <div className="mb-4">
         {vehicles.length > 0 && (
@@ -152,7 +263,13 @@ export default function FuelPage() {
       {filtered.length === 0 ? (
         <EmptyState
           title="Nenhum abastecimento"
-          description={vehicleFilter ? "Nenhum abastecimento para este veículo." : "Registre o primeiro abastecimento"}
+          description={
+            vehicleFilter
+              ? `Nenhum abastecimento para este veículo ${periodFilter === "all" ? "no histórico." : "neste mês."}`
+              : periodFilter === "all"
+                ? "Nenhum abastecimento registrado no histórico."
+                : "Nenhum abastecimento registrado neste mês."
+          }
           action={
             <Button onClick={() => router.push("/fuel/new")}>
               Novo abastecimento
