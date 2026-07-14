@@ -310,6 +310,10 @@ export type Database = {
           last_fuel_reminder_lng: number | null;
           location_permission_status: string;
           push_permission_status: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          subscription_status: string | null;
+          subscription_tier: string;
         };
         Insert: {
           created_at?: string;
@@ -322,6 +326,10 @@ export type Database = {
           last_fuel_reminder_lng?: number | null;
           location_permission_status?: string;
           push_permission_status?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_tier?: string;
         };
         Update: {
           created_at?: string;
@@ -334,6 +342,10 @@ export type Database = {
           last_fuel_reminder_lng?: number | null;
           location_permission_status?: string;
           push_permission_status?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_tier?: string;
         };
         Relationships: [];
       };

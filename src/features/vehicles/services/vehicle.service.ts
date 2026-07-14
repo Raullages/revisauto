@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/supabase";
+import { billingService } from "@/features/billing/services/billing.service";
 import type { VehicleFormData } from "../model/schemas";
 
 type VehicleRow = Database["public"]["Tables"]["vehicles"]["Row"];
@@ -44,6 +45,8 @@ export const vehicleService = {
   async create(data: VehicleFormData): Promise<VehicleRow> {
     const supabase = createClient();
     const userId = await getCurrentUserId();
+
+    await billingService.assertCanCreateVehicle();
 
     const payload: Record<string, unknown> = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== ""),

@@ -16,8 +16,8 @@ export default function NewVehiclePage() {
       await mutateAsync(data);
       toast.success("Veículo cadastrado!");
       router.push("/vehicles");
-    } catch {
-      toast.error("Erro ao cadastrar veículo");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar veículo");
     }
   };
 

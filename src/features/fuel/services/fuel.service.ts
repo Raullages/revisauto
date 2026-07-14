@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { billingService } from "@/features/billing/services/billing.service";
 import type { FuelLogWithVehicle, FuelStats } from "../model/types";
 import type { FuelFormData } from "../model/schemas";
 
@@ -65,6 +66,7 @@ export const fuelService = {
     const supabase = createClient();
     const userId = await getCurrentUserId();
 
+    await billingService.assertCanCreateFuelLog();
     await assertVehicleOwnership(data.vehicle_id, userId);
 
     const payload: Record<string, unknown> = {

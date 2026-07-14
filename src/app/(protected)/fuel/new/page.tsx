@@ -19,8 +19,8 @@ export default function NewFuelPage() {
       await createFuelLog(data);
       toast.success("Abastecimento registrado!");
       router.push("/fuel");
-    } catch {
-      toast.error("Erro ao registrar abastecimento");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao registrar abastecimento");
     }
   };
 

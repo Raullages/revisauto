@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Abastecimentos", href: "/fuel" },
-  { label: "Postos Próximos", href: "/fuel/nearby" },
-  { label: "Calculadora", href: "/fuel/calculator" },
-  { label: "Relatórios", href: "/fuel/reports" },
+  { label: "Postos Próximos", href: "/fuel/nearby", premium: true },
+  { label: "Calculadora", href: "/fuel/calculator", premium: true },
+  { label: "Relatórios", href: "/fuel/reports", premium: true },
 ];
 
 export default function FuelLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +34,14 @@ export default function FuelLayout({ children }: { children: React.ReactNode }) 
                     : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-200",
                 )}
               >
-                {tab.label}
+                <span className="inline-flex items-center gap-2">
+                  {tab.label}
+                  {tab.premium ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                      Premium
+                    </span>
+                  ) : null}
+                </span>
               </Link>
             );
           })}

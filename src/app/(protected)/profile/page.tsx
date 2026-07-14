@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { FREE_PLAN_LIMITS, isPremiumTier, type SubscriptionTier } from "@/features/billing/model/plans";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useFuelStationReminder } from "@/hooks/useFuelStationReminder";
 import { Button } from "@/components/ui/Button";
@@ -55,7 +57,7 @@ function getSystemPermissionInstructions(permission: "location" | "notifications
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<{ id?: string; email?: string; fullName?: string } | null>(null);
+  const [user, setUser] = useState<{ id?: string; email?: string; fullName?: string; subscriptionTier?: SubscriptionTier } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sendingTestNotification, setSendingTestNotification] = useState(false);
   const [reminderDebug, setReminderDebug] = useState<ReminderDebugState | null>(null);
@@ -69,7 +71,7 @@ export default function ProfilePage() {
       if (authUser) {
         supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, subscription_tier")
           .eq("id", authUser.id)
           .single()
           .then(({ data: profile }) => {
@@ -77,6 +79,7 @@ export default function ProfilePage() {
               id: authUser.id,
               email: authUser.email,
               fullName: profile?.full_name || authUser.user_metadata?.full_name || "",
+              subscriptionTier: (profile?.subscription_tier as SubscriptionTier | undefined) ?? "free",
             });
             setLoading(false);
           });
@@ -179,6 +182,7 @@ export default function ProfilePage() {
   const locationStatus = getPermissionStatusMeta(reminder.preferences.location_permission_status);
   const notificationStatus = getPermissionStatusMeta(reminder.preferences.push_permission_status);
   const isOwner = user?.id === OWNER_USER_ID;
+  const isPremium = isPremiumTier(user?.subscriptionTier);
 
   return (
     <div className="mx-auto max-w-lg">
@@ -213,6 +217,51 @@ export default function ProfilePage() {
                 {user?.email || "—"}
               </p>
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-white">Seu plano</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {isPremium
+                ? "Premium ativo com cancelamento a qualquer momento."
+                : "Você está no plano gratuito do revisAuto."}
+            </p>
+          </div>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPremium ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"}`}>
+            {isPremium ? "Premium" : "Free"}
+          </span>
+        </div>
+
+        <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+          {isPremium ? (
+            <>
+              <p>Veículos ilimitados</p>
+              <p>Manutenções ilimitadas</p>
+              <p>Abastecimentos ilimitados</p>
+              <p>Postos próximos, calculadora e relatórios liberados</p>
+            </>
+          ) : (
+            <>
+              <p>Até {FREE_PLAN_LIMITS.vehicles} veículo</p>
+              <p>Até {FREE_PLAN_LIMITS.maintenances} manutenções</p>
+              <p>Até {FREE_PLAN_LIMITS.fuelLogs} abastecimentos</p>
+              <p>Postos próximos, calculadora e relatórios fazem parte do Premium</p>
+            </>
+          )}
+        </div>
+
+        {!isPremium && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+              Premium por R$ 12,90/mês. Cancelamento a qualquer momento.
+            </p>
+            <Link href="/premium">
+              <Button size="sm">Fazer upgrade</Button>
+            </Link>
           </div>
         )}
       </div>

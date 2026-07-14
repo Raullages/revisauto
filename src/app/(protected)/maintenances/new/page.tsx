@@ -16,8 +16,8 @@ export default function NewMaintenancePage() {
       await mutateAsync(data);
       toast.success("Manutenção registrada!");
       router.push("/maintenances");
-    } catch {
-      toast.error("Erro ao registrar manutenção");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao registrar manutenção");
     }
   };
 

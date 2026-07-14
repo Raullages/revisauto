@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { billingService } from "@/features/billing/services/billing.service";
 import type { MaintenanceWithRelations } from "../model/types";
 import type { MaintenanceFormData } from "../model/schemas";
 
@@ -70,6 +71,7 @@ export const maintenanceService = {
     const supabase = createClient();
     const userId = await getCurrentUserId();
 
+    await billingService.assertCanCreateMaintenance();
     await assertVehicleOwnership(data.vehicle_id, userId);
 
     const payload: Record<string, unknown> = Object.fromEntries(

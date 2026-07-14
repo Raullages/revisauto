@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PremiumFeatureGate } from "@/components/billing/PremiumFeatureGate";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { isPremiumTier } from "@/features/billing/model/plans";
+import { useCurrentPlan } from "@/features/billing/viewmodel/useBilling";
 import { requestCurrentPosition } from "@/lib/mobile/reminder";
 
 type Station = {
@@ -48,10 +51,15 @@ type ViewState =
   | { type: "stations"; stations: Station[] };
 
 export default function NearbyFuelStationsPage() {
+  const { data: plan, isLoading: loadingPlan } = useCurrentPlan();
   const [view, setView] = useState<ViewState>({ type: "loading" });
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   useEffect(() => {
+    if (loadingPlan || !isPremiumTier(plan?.subscription_tier)) {
+      return;
+    }
+
     let active = true;
 
     void (async () => {
@@ -104,7 +112,24 @@ export default function NearbyFuelStationsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadingPlan, plan?.subscription_tier]);
+
+  if (loadingPlan) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!isPremiumTier(plan?.subscription_tier)) {
+    return (
+      <PremiumFeatureGate
+        title="Postos próximos fazem parte do Premium"
+        description="Desbloqueie a busca por postos próximos para agilizar o registro dos seus abastecimentos."
+      />
+    );
+  }
 
   if (view.type === "loading") {
     return (

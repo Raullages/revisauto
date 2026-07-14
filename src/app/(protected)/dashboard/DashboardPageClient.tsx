@@ -2,7 +2,10 @@
 
 import { AlertTriangle, ArrowRight, CarFront, CircleGauge, Clock3, Wrench } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { PremiumFeatureGate } from "@/components/billing/PremiumFeatureGate";
 import { useDashboard } from "@/features/dashboard/viewmodel/useDashboard";
+import { isPremiumTier } from "@/features/billing/model/plans";
+import { useCurrentPlan } from "@/features/billing/viewmodel/useBilling";
 import { useFuelStats } from "@/features/fuel/viewmodel/useFuel";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { CardSkeleton } from "@/components/ui/Skeleton";
@@ -28,10 +31,11 @@ function formatMaintenanceMeta(date?: string | null, km?: number | null) {
 
 export default function DashboardPageClient() {
   const router = useRouter();
+  const { data: plan, isLoading: loadingPlan } = useCurrentPlan();
   const { data, isLoading } = useDashboard();
   const { data: fuelStats } = useFuelStats();
 
-  if (isLoading) {
+  if (isLoading || loadingPlan) {
     return (
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
@@ -46,6 +50,8 @@ export default function DashboardPageClient() {
   }
 
   if (!data) return null;
+
+  const isPremium = isPremiumTier(plan?.subscription_tier);
 
   const statCards = [
     {
@@ -107,6 +113,127 @@ export default function DashboardPageClient() {
       badge: "Em breve",
     })),
   ].slice(0, 3);
+
+  if (!isPremium) {
+    return (
+      <div>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Visão geral dos seus veículos</p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {statCards.slice(0, 2).map((card) => {
+            const Icon = card.icon;
+
+            return (
+              <Card key={card.label}>
+                <CardBody className="p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{card.label}</p>
+                      <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+                    </div>
+                    <div className={`rounded-xl p-3 ${card.tone}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            );
+          })}
+
+          <Card>
+            <CardBody className="p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Alertas ativos</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{data.alertCount}</p>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Atenção agora</h2>
+              <Button variant="ghost" size="sm" onClick={() => router.push("/maintenances")}>
+                Ver todas
+              </Button>
+            </CardHeader>
+            <CardBody>
+              {attentionItems.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum alerta no momento.</p>
+              ) : (
+                <div className="space-y-3">
+                  {attentionItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => router.push(item.href)}
+                      className={`w-full rounded-xl border p-3 text-left transition-colors hover:opacity-90 ${item.tone}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{item.title}</p>
+                          <p className="mt-1 text-xs opacity-75">{item.subtitle}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+                          {item.badge}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Últimas manutenções</h2>
+              <Button variant="ghost" size="sm" onClick={() => router.push("/maintenances")}>
+                Ver todas
+              </Button>
+            </CardHeader>
+            <CardBody>
+              {data.recentMaintenances.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma manutenção registrada.</p>
+              ) : (
+                <div className="space-y-1">
+                  {data.recentMaintenances.slice(0, 4).map((m) => (
+                    <div
+                      key={m.id}
+                      onClick={() => router.push(`/maintenances/${m.id}`)}
+                      className="flex cursor-pointer flex-col items-start gap-2 rounded-lg px-2 py-2.5 hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-gray-700/50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white sm:truncate">{m.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {m.vehicles?.brand} {m.vehicles?.model} {m.maintenance_date ? `— ${new Date(m.maintenance_date + "T12:00:00").toLocaleDateString("pt-BR")}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex self-end items-center gap-2 text-gray-400 sm:ml-3 sm:shrink-0 sm:self-auto">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(m.amount)}</p>
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+
+        <div className="mt-6">
+          <PremiumFeatureGate
+            title="Dashboard completo faz parte do Premium"
+            description="Desbloqueie gastos, médias de combustível, próximas trocas e a visão completa do seu veículo no plano Premium."
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
