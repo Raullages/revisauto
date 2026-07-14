@@ -50,16 +50,38 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
+  let subscriptionStatus: string | null = session.payment_status;
+  let subscriptionTier: "free" | "premium" = session.payment_status === "paid" ? "premium" : "free";
+
+  if (subscriptionId) {
+    const stripe = getStripe();
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+    subscriptionStatus = subscription.status;
+    subscriptionTier = isPremiumStatus(subscription.status) ? "premium" : "free";
+  }
+
   await updateProfileByUserId(userId, {
     stripe_customer_id: customerId,
     stripe_subscription_id: subscriptionId,
-    subscription_status: session.payment_status,
-    subscription_tier: session.payment_status === "paid" ? "premium" : "free",
+    subscription_status: subscriptionStatus,
+    subscription_tier: subscriptionTier,
   });
 }
 
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
+  const userId = subscription.metadata?.user_id;
   const customerId = typeof subscription.customer === "string" ? subscription.customer : null;
+
+  if (userId) {
+    await updateProfileByUserId(userId, {
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      subscription_status: subscription.status,
+      subscription_tier: isPremiumStatus(subscription.status) ? "premium" : "free",
+    });
+    return;
+  }
 
   if (!customerId) {
     return;
