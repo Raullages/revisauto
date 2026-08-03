@@ -1,5 +1,7 @@
 # Lembrete de abastecimento por localizacao
 
+> Este documento segue como contexto e historico tecnico da feature. O acompanhamento executavel do que ainda falta fica em `specs/backlog/ajustar-lembrete-localizacao.md`.
+
 ## Objetivo
 
 Detectar quando o usuario esta parado por um periodo relevante perto de um posto de combustivel e enviar um lembrete para registrar o abastecimento no app.

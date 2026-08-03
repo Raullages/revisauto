@@ -1,5 +1,7 @@
 # Release Smoke Test
 
+> Versao executavel resumida desta validacao: `specs/qa/validar-launch-candidate.md`.
+
 Roteiro curto de validacao manual para decidir se o `PessoAuto` esta pronto para um lancamento inicial controlado.
 
 Objetivo:

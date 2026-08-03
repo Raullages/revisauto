@@ -1,5 +1,7 @@
 # External Release Verification
 
+> Itens externos de release continuam documentados aqui, mas o runbook operacional principal agora aponta para `specs/operations/runbook-release-operacional.md`.
+
 Checklist objetivo dos itens de launch readiness que dependem de configuracao externa, dashboard ou validacao em dispositivo real.
 
 Atualizado em `2026-06-12`.

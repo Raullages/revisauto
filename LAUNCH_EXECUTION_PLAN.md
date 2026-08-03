@@ -1,5 +1,7 @@
 # Launch Execution Plan
 
+> Este documento segue como referencia detalhada. A versao mais acionavel do fluxo agora comeca em `specs/README.md` e `specs/operations/runbook-release-operacional.md`.
+
 Plano de execucao derivado de `LAUNCH_READINESS_CHECKLIST.md`.
 
 Objetivo:

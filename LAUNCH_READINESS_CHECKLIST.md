@@ -1,5 +1,7 @@
 # Launch Readiness Checklist
 
+> Checklist de referencia ampla. Para execucao pratica e priorizada, ver `specs/qa/validar-launch-candidate.md` e `specs/operations/runbook-release-operacional.md`.
+
 Documento operacional para avaliar se o `PessoAuto` esta pronto para um lancamento publico inicial.
 
 Objetivo:

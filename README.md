@@ -1,4 +1,16 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) project used to build `PessoAuto`, a PWA/mobile-oriented app for vehicle maintenance and fuel tracking.
+
+## Product Backlog Specs
+
+Feature specs and implementation checklists now live in `specs/`.
+
+Start here:
+
+- `specs/README.md`
+- `specs/backlog/implementar-calculator.md`
+- `specs/backlog/implementar-relatorios-combustivel.md`
+- `specs/backlog/implementar-brasil-api-fipe.md`
+- `specs/backlog/implementar-cancelamento-stripe.md`
 
 ## Environment
 

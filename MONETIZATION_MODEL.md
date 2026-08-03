@@ -1,5 +1,7 @@
 # Backlog de Monetizacao — revisAuto
 
+> Itens acionaveis de monetizacao agora devem viver em `specs/`, para evitar backlog duplicado neste documento. Hoje o principal item movido foi `specs/backlog/implementar-cancelamento-stripe.md`.
+
 ## Status Atual
 
 - [x] Modelo freemium definido
@@ -191,6 +193,8 @@ Implementacao inicial sugerida:
 
 ## Backlog Inicial de Monetizacao
 
+Esta secao passa a funcionar como registro historico/resumo do que foi decidido e implementado, nao como backlog executavel principal.
+
 ### Fase 1 — Base do plano
 
 1. [x] adicionar tier no perfil do usuario
@@ -290,11 +294,11 @@ Observacao tecnica:
 
 ## Proximos Passos Recomendados
 
-1. aplicar o mesmo conceito de plano no dashboard
-2. criar pagina de upgrade mais explicita dentro de `/profile`
-3. integrar Stripe Checkout mensal
-4. ligar webhook para promover `subscription_tier` para `premium`
-5. criar fluxo de cancelamento
+Para execucao pratica e priorizacao, consultar `specs/README.md` e, para billing, principalmente:
+
+- `specs/backlog/implementar-cancelamento-stripe.md`
+- `specs/backlog/implementar-calculator.md`
+- `specs/backlog/implementar-relatorios-combustivel.md`
 
 ---
 
