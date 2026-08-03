@@ -4,6 +4,8 @@ import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
 
+export const runtime = "nodejs";
+
 function isPremiumStatus(status: string | null | undefined) {
   return status === "active" || status === "trialing";
 }

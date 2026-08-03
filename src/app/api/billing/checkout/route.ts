@@ -1,7 +1,28 @@
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe, getStripePriceId } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+export const runtime = "nodejs";
+
+async function getAppUrl() {
+  const headerStore = await headers();
+  const origin = headerStore.get("origin");
+
+  if (origin) {
+    return origin;
+  }
+
+  const forwardedHost = headerStore.get("x-forwarded-host");
+
+  if (forwardedHost) {
+    const forwardedProto = headerStore.get("x-forwarded-proto") ?? "https";
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  return process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+}
 
 export async function POST() {
   try {
@@ -54,7 +75,7 @@ export async function POST() {
       }
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+    const appUrl = await getAppUrl();
 
     if (!appUrl) {
       return NextResponse.json({ error: "NEXT_PUBLIC_APP_URL is not configured" }, { status: 500 });
